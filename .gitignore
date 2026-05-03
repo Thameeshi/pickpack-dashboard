@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# macOS
+.DS_Store
+
+# local env files
+.env
+.env.local
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
