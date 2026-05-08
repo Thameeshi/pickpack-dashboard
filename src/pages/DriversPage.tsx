@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getDrivers, updateUserStatus, subscribeToDriverLocations } from '../services/userService';
+import { createNotification } from '../services/notificationService';
 import { getTripsByDriver } from '../services/tripService';
 import { UserProfile, Driver, TripSession } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -45,10 +46,27 @@ export default function DriversPage() {
 
   const liveMap = new Map(liveDrivers.map(d => [d.uid, d]));
 
-  const handleStatusChange = async (uid: string, status: 'approved' | 'suspended' | 'rejected') => {
-    await updateUserStatus(uid, status, profile?.uid);
+  const handleStatusChange = async (d: UserProfile, status: 'approved' | 'suspended' | 'rejected') => {
+    await updateUserStatus(d.uid, status, profile?.uid);
+    
+    // Notify the supervisor who added the driver when they are approved
+    if (status === 'approved' && d.supervisorId) {
+      await createNotification({
+        recipientId: d.supervisorId,
+        title: 'Driver Approved',
+        body: `The driver account for ${d.name || d.displayName} has been approved by the super admin.`,
+        type: 'approval',
+        read: false,
+        createdAt: Date.now(),
+        data: {
+          driverId: d.uid,
+          driverName: d.name || d.displayName || 'Driver'
+        }
+      });
+    }
+
     refresh();
-    if (selected?.uid === uid) setSelected(prev => prev ? { ...prev, status } : null);
+    if (selected?.uid === d.uid) setSelected(prev => prev ? { ...prev, status } : null);
   };
 
   return (
@@ -110,15 +128,15 @@ export default function DriversPage() {
                         <button className="btn btn-ghost btn-sm" onClick={() => setSelected(d)}><Eye size={14} /> View</button>
                         {d.status === 'pending' && (
                           <>
-                            <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(d.uid, 'approved')}><CheckCircle size={14} /></button>
-                            <button className="btn btn-danger btn-sm" onClick={() => handleStatusChange(d.uid, 'rejected')}><XCircle size={14} /></button>
+                            <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(d, 'approved')}><CheckCircle size={14} /></button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleStatusChange(d, 'rejected')}><XCircle size={14} /></button>
                           </>
                         )}
                         {d.status === 'approved' && (
-                          <button className="btn btn-secondary btn-sm" onClick={() => handleStatusChange(d.uid, 'suspended')}>Suspend</button>
+                          <button className="btn btn-secondary btn-sm" onClick={() => handleStatusChange(d, 'suspended')}>Suspend</button>
                         )}
                         {d.status === 'suspended' && (
-                          <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(d.uid, 'approved')}>Reactivate</button>
+                          <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(d, 'approved')}>Reactivate</button>
                         )}
                       </div>
                     </td>

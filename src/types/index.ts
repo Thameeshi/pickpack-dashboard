@@ -21,6 +21,7 @@ export interface UserProfile {
   vehicleColor?: string;
   department?: string;
   employeeId?: string;
+  supervisorId?: string;
 }
 
 export interface Driver {
