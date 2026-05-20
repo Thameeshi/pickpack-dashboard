@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { subscribeToNotifications } from '../services/notificationService';
 import { AppNotification } from '../types';
-import { LayoutDashboard, Truck, ClipboardList, Navigation, Fuel, Users, Bell, LogOut, Menu, X, MapPin } from 'lucide-react';
+import { LayoutDashboard, Truck, ClipboardList, Navigation, Fuel, Users, Bell, LogOut, Menu, X, MapPin, PenTool } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { profile, logout } = useAuth();
@@ -44,6 +44,9 @@ export default function DashboardLayout() {
           </NavLink>
           <NavLink to="/fuel" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <Fuel size={20} /> Fuel Expenses
+          </NavLink>
+          <NavLink to="/repairs" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
+            <PenTool size={20} /> Vehicle Repairs
           </NavLink>
           <NavLink to="/live-map" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <MapPin size={20} /> Live Map

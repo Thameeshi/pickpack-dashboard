@@ -7,6 +7,7 @@ import DriversPage from './pages/DriversPage';
 import TasksPage from './pages/TasksPage';
 import TripsPage from './pages/TripsPage';
 import FuelPage from './pages/FuelPage';
+import RepairPage from './pages/RepairPage';
 import UsersPage from './pages/UsersPage';
 import NotificationsPage from './pages/NotificationsPage';
 import LiveMapPage from './pages/LiveMapPage';
@@ -32,6 +33,7 @@ function AppRoutes() {
         <Route path="tasks" element={<TasksPage />} />
         <Route path="trips" element={<TripsPage />} />
         <Route path="fuel" element={<FuelPage />} />
+        <Route path="repairs" element={<RepairPage />} />
         <Route path="live-map" element={<LiveMapPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
