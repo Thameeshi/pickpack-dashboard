@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, updateDoc, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { AppNotification } from '../types';
 
@@ -27,4 +27,8 @@ export async function markAllAsRead(userId: string): Promise<void> {
   );
   const snap = await getDocs(q);
   await Promise.all(snap.docs.map(d => updateDoc(d.ref, { read: true })));
+}
+
+export async function createNotification(notification: Omit<AppNotification, 'id'>): Promise<void> {
+  await addDoc(collection(db, 'notifications'), notification);
 }
