@@ -276,12 +276,23 @@ function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => void })
                         style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', cursor: 'pointer', transition: 'transform 0.2s, opacity 0.2s' }}
                         onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.opacity = '0.9'; }}
                         onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '1'; }}
+                        onError={(e) => {
+                          console.error('❌ Failed to load delivery photo:', task.proofOfDeliveryUrl);
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            const fallback = document.createElement('div');
+                            fallback.style.cssText = 'width:100%;height:120px;borderRadius:var(--radius-md);border:1px dashed var(--border);display:flex;flexDirection:column;alignItems:center;justifyContent:center;background:rgba(239,68,68,0.05)';
+                            fallback.innerHTML = '<span style="fontSize:24;marginBottom:4">⚠️</span><span style="fontSize:10;color:var(--danger);fontWeight:600">Image Failed</span>';
+                            parent.appendChild(fallback);
+                          }
+                        }}
                       />
                     </a>
                   ) : (
                     <div style={{ width: '100%', height: 120, borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.05)' }}>
                       <span style={{ fontSize: 24, marginBottom: 4 }}>📷</span>
-                      <span style={{ fontSize: 10, color: 'var(--danger)', fontWeight: 600 }}>Upload Failed</span>
+                      <span style={{ fontSize: 10, color: 'var(--danger)', fontWeight: 600 }}>No Photo</span>
                     </div>
                   )}
                 </div>
@@ -297,12 +308,23 @@ function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => void })
                         style={{ width: '100%', height: 120, objectFit: 'contain', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'transform 0.2s, opacity 0.2s' }}
                         onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.opacity = '0.9'; }}
                         onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '1'; }}
+                        onError={(e) => {
+                          console.error('❌ Failed to load signature:', task.signatureUrl);
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            const fallback = document.createElement('div');
+                            fallback.style.cssText = 'width:100%;height:120px;borderRadius:var(--radius-md);border:1px dashed var(--border);display:flex;flexDirection:column;alignItems:center;justifyContent:center;background:rgba(239,68,68,0.05)';
+                            fallback.innerHTML = '<span style="fontSize:24;marginBottom:4">⚠️</span><span style="fontSize:10;color:var(--danger);fontWeight:600">Image Failed</span>';
+                            parent.appendChild(fallback);
+                          }
+                        }}
                       />
                     </a>
                   ) : (
                     <div style={{ width: '100%', height: 120, borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.05)' }}>
                       <span style={{ fontSize: 24, marginBottom: 4 }}>✍️</span>
-                      <span style={{ fontSize: 10, color: 'var(--danger)', fontWeight: 600 }}>Upload Failed</span>
+                      <span style={{ fontSize: 10, color: 'var(--danger)', fontWeight: 600 }}>No Signature</span>
                     </div>
                   )}
                 </div>
@@ -318,6 +340,17 @@ function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => void })
                         style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', cursor: 'pointer', transition: 'transform 0.2s, opacity 0.2s' }}
                         onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.opacity = '0.9'; }}
                         onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '1'; }}
+                        onError={(e) => {
+                          console.error('❌ Failed to load document:', task.deliveryDocumentUrl);
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            const fallback = document.createElement('div');
+                            fallback.style.cssText = 'width:100%;height:120px;borderRadius:var(--radius-md);border:1px dashed var(--border);display:flex;flexDirection:column;alignItems:center;justifyContent:center;background:rgba(239,68,68,0.05)';
+                            fallback.innerHTML = '<span style="fontSize:24;marginBottom:4">⚠️</span><span style="fontSize:10;color:var(--danger);fontWeight:600">Image Failed</span>';
+                            parent.appendChild(fallback);
+                          }
+                        }}
                       />
                     </a>
                   ) : (

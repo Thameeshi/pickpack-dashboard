@@ -126,7 +126,17 @@ export default function RepairPage() {
                       <div style={{ display: 'flex', gap: 4 }}>
                         {r.photoUrls.map((url, i) => (
                           <a key={i} href={url} target="_blank" rel="noreferrer" title="View photo">
-                            <img src={url} alt="Repair" style={{ width: 30, height: 30, borderRadius: 4, objectFit: 'cover', border: '1px solid #eee' }} />
+                            <img 
+                              src={url} 
+                              alt="Repair" 
+                              style={{ width: 30, height: 30, borderRadius: 4, objectFit: 'cover', border: '1px solid #eee' }}
+                              onError={(e) => {
+                                console.error('❌ Failed to load repair photo:', url);
+                                e.currentTarget.style.opacity = '0.3';
+                                e.currentTarget.style.borderColor = '#ef4444';
+                                e.currentTarget.title = 'Image failed to load';
+                              }}
+                            />
                           </a>
                         ))}
                       </div>
