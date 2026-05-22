@@ -71,6 +71,7 @@ export interface Task {
   driverAccepted?: boolean;
   acceptedAt?: number;
   rejectedReason?: string;
+  assignedAt?: number;
   arrivedAt?: number;
   createdAt: number;
   updatedAt: number;
