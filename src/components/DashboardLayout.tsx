@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { subscribeToNotifications } from '../services/notificationService';
 import { AppNotification } from '../types';
-import { LayoutDashboard, Truck, ClipboardList, Navigation, Fuel, Users, Bell, LogOut, Menu, X, MapPin, PenTool } from 'lucide-react';
+import { LayoutDashboard, Truck, ClipboardList, Navigation, Fuel, Users, Bell, LogOut, Menu, X, MapPin, PenTool, Settings, Key } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { profile, logout } = useAuth();
@@ -57,9 +57,17 @@ export default function DashboardLayout() {
             {unreadCount > 0 && <span className="nav-badge">{unreadCount}</span>}
           </NavLink>
           {isSuperAdmin && (
-            <NavLink to="/users" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
-              <Users size={20} /> User Management
-            </NavLink>
+            <>
+              <NavLink to="/users" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
+                <Users size={20} /> User Management
+              </NavLink>
+              <NavLink to="/password-reset" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
+                <Key size={20} /> Password Reset
+              </NavLink>
+              <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
+                <Settings size={20} /> System Settings
+              </NavLink>
+            </>
           )}
         </nav>
         <div className="sidebar-footer">

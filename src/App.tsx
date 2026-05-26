@@ -9,8 +9,10 @@ import TripsPage from './pages/TripsPage';
 import FuelPage from './pages/FuelPage';
 import RepairPage from './pages/RepairPage';
 import UsersPage from './pages/UsersPage';
+import PasswordResetPage from './pages/PasswordResetPage';
 import NotificationsPage from './pages/NotificationsPage';
 import LiveMapPage from './pages/LiveMapPage';
+import SettingsPage from './pages/SettingsPage';
 import './index.css';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -36,7 +38,9 @@ function AppRoutes() {
         <Route path="repairs" element={<RepairPage />} />
         <Route path="live-map" element={<LiveMapPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="password-reset" element={<PasswordResetPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
