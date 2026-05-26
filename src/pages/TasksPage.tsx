@@ -179,27 +179,201 @@ function AssignModal({ task, drivers, onClose }: { task: Task; drivers: UserProf
 
 function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => void }) {
   const sm = STATUS_MAP[task.status] || { cls: 'badge-default', label: task.status };
+  const formatTime = (ts?: number) => {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+  const isDelivered = task.status === 'delivered';
+  const hasValidPhoto = task.proofOfDeliveryUrl && task.proofOfDeliveryUrl !== 'upload_failed';
+  const hasSignature = !!task.signatureUrl;
+  const hasDocument = !!task.deliveryDocumentUrl;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 560 }}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 640 }}>
         <div className="modal-header"><h3>Task Details</h3><button className="btn-ghost btn-icon" onClick={onClose}><X size={18} /></button></div>
-        <div className="modal-body">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div className="modal-body" style={{ padding: 0 }}>
+          {/* Status & ID */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
             <span className={`badge ${sm.cls}`}>{sm.label}</span>
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>ID: {task.id?.substring(0, 8)}</span>
           </div>
-          <div className="driver-detail-card">
-            <div className="detail-field"><label>Recipient</label><p>{task.recipientName}</p></div>
-            <div className="detail-field"><label>Phone</label><p>{task.recipientPhone}</p></div>
-            <div className="detail-field"><label>Pickup</label><p>{task.pickupLocation}</p></div>
-            <div className="detail-field"><label>Delivery</label><p>{task.deliveryLocation}</p></div>
-            <div className="detail-field"><label>Driver</label><p>{task.assignedDriverName || 'Unassigned'}</p></div>
-            <div className="detail-field"><label>Priority</label><p>{task.priority}</p></div>
-            {task.description && <div className="detail-field" style={{ gridColumn: '1/-1' }}><label>Description</label><p>{task.description}</p></div>}
-            {task.proofOfDeliveryUrl && <div className="detail-field"><label>Proof of Delivery</label><p><a href={task.proofOfDeliveryUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-light)' }}>View Photo</a></p></div>}
-            {task.signatureUrl && <div className="detail-field"><label>Signature</label><p><a href={task.signatureUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-light)' }}>View Signature</a></p></div>}
-            {task.rejectedReason && <div className="detail-field" style={{ gridColumn: '1/-1' }}><label>Rejection Reason</label><p style={{ color: 'var(--danger)' }}>{task.rejectedReason}</p></div>}
+
+          {/* Basic Info */}
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
+            <div className="driver-detail-card">
+              <div className="detail-field"><label>Recipient</label><p>{task.recipientName}</p></div>
+              <div className="detail-field"><label>Phone</label><p>{task.recipientPhone}</p></div>
+              <div className="detail-field"><label>Pickup</label><p>{task.pickupLocation}</p></div>
+              <div className="detail-field"><label>Delivery</label><p>{task.deliveryLocation}</p></div>
+              <div className="detail-field"><label>Driver</label><p>{task.assignedDriverName || 'Unassigned'}</p></div>
+              <div className="detail-field"><label>Priority</label><p>{task.priority}</p></div>
+              {task.description && <div className="detail-field" style={{ gridColumn: '1/-1' }}><label>Description</label><p>{task.description}</p></div>}
+              {task.rejectedReason && <div className="detail-field" style={{ gridColumn: '1/-1' }}><label>Rejection Reason</label><p style={{ color: 'var(--danger)' }}>{task.rejectedReason}</p></div>}
+            </div>
           </div>
+
+          {/* Timeline */}
+          <div style={{ padding: '20px 24px', borderBottom: isDelivered ? '1px solid var(--border)' : 'none' }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.5px' }}>📋 Timeline</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { label: 'Created', time: task.createdAt, icon: '📝' },
+                { label: 'Assigned', time: task.assignedAt, icon: '👤' },
+                { label: 'Accepted', time: task.acceptedAt, icon: '✅' },
+                { label: 'Arrived', time: task.arrivedAt, icon: '📍' },
+                { label: 'Completed', time: task.completedAt, icon: '🏁' },
+              ].filter(e => e.time).map((entry, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 14 }}>{entry.icon}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', minWidth: 80 }}>{entry.label}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatTime(entry.time)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Proof of Delivery Section — always show for delivered tasks */}
+          {isDelivered && (
+            <div style={{ padding: '20px 24px' }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.5px' }}>📦 Proof of Delivery</p>
+
+              {/* Recipient Confirmed Name */}
+              {task.recipientConfirmedName && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '10px 14px', background: 'rgba(16,185,129,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <span style={{ fontSize: 16 }}>👤</span>
+                  <div>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>CONFIRMED BY</span>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: '#34D399', marginTop: 2 }}>{task.recipientConfirmedName}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* GPS Coordinates */}
+              {(task.deliveryLatitude && task.deliveryLongitude) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '10px 14px', background: 'rgba(59,130,246,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                  <span style={{ fontSize: 16 }}>📍</span>
+                  <div>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>DELIVERY LOCATION</span>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginTop: 2 }}>
+                      {task.deliveryLatitude.toFixed(6)}, {task.deliveryLongitude.toFixed(6)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Proof Items Grid — always show all 3 with status */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
+                {/* Delivery Photo */}
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>📷 Photo</p>
+                  {hasValidPhoto ? (
+                    <a href={task.proofOfDeliveryUrl} target="_blank" rel="noreferrer">
+                      <img
+                        src={task.proofOfDeliveryUrl}
+                        alt="Delivery"
+                        style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', cursor: 'pointer', transition: 'transform 0.2s, opacity 0.2s' }}
+                        onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.opacity = '0.9'; }}
+                        onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '1'; }}
+                        onError={(e) => {
+                          console.error('❌ Failed to load delivery photo:', task.proofOfDeliveryUrl);
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            const fallback = document.createElement('div');
+                            fallback.style.cssText = 'width:100%;height:120px;borderRadius:var(--radius-md);border:1px dashed var(--border);display:flex;flexDirection:column;alignItems:center;justifyContent:center;background:rgba(239,68,68,0.05)';
+                            fallback.innerHTML = '<span style="fontSize:24;marginBottom:4">⚠️</span><span style="fontSize:10;color:var(--danger);fontWeight:600">Image Failed</span>';
+                            parent.appendChild(fallback);
+                          }
+                        }}
+                      />
+                    </a>
+                  ) : (
+                    <div style={{ width: '100%', height: 120, borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.05)' }}>
+                      <span style={{ fontSize: 24, marginBottom: 4 }}>📷</span>
+                      <span style={{ fontSize: 10, color: 'var(--danger)', fontWeight: 600 }}>No Photo</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Signature */}
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>✍️ Signature</p>
+                  {hasSignature ? (
+                    <a href={task.signatureUrl} target="_blank" rel="noreferrer">
+                      <img
+                        src={task.signatureUrl}
+                        alt="Signature"
+                        style={{ width: '100%', height: 120, objectFit: 'contain', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'transform 0.2s, opacity 0.2s' }}
+                        onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.opacity = '0.9'; }}
+                        onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '1'; }}
+                        onError={(e) => {
+                          console.error('❌ Failed to load signature:', task.signatureUrl);
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            const fallback = document.createElement('div');
+                            fallback.style.cssText = 'width:100%;height:120px;borderRadius:var(--radius-md);border:1px dashed var(--border);display:flex;flexDirection:column;alignItems:center;justifyContent:center;background:rgba(239,68,68,0.05)';
+                            fallback.innerHTML = '<span style="fontSize:24;marginBottom:4">⚠️</span><span style="fontSize:10;color:var(--danger);fontWeight:600">Image Failed</span>';
+                            parent.appendChild(fallback);
+                          }
+                        }}
+                      />
+                    </a>
+                  ) : (
+                    <div style={{ width: '100%', height: 120, borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.05)' }}>
+                      <span style={{ fontSize: 24, marginBottom: 4 }}>✍️</span>
+                      <span style={{ fontSize: 10, color: 'var(--danger)', fontWeight: 600 }}>No Signature</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Document */}
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>📄 Document</p>
+                  {hasDocument ? (
+                    <a href={task.deliveryDocumentUrl} target="_blank" rel="noreferrer">
+                      <img
+                        src={task.deliveryDocumentUrl}
+                        alt="Document"
+                        style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', cursor: 'pointer', transition: 'transform 0.2s, opacity 0.2s' }}
+                        onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.opacity = '0.9'; }}
+                        onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '1'; }}
+                        onError={(e) => {
+                          console.error('❌ Failed to load document:', task.deliveryDocumentUrl);
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            const fallback = document.createElement('div');
+                            fallback.style.cssText = 'width:100%;height:120px;borderRadius:var(--radius-md);border:1px dashed var(--border);display:flex;flexDirection:column;alignItems:center;justifyContent:center;background:rgba(239,68,68,0.05)';
+                            fallback.innerHTML = '<span style="fontSize:24;marginBottom:4">⚠️</span><span style="fontSize:10;color:var(--danger);fontWeight:600">Image Failed</span>';
+                            parent.appendChild(fallback);
+                          }
+                        }}
+                      />
+                    </a>
+                  ) : (
+                    <div style={{ width: '100%', height: 120, borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(100,116,139,0.05)' }}>
+                      <span style={{ fontSize: 24, marginBottom: 4 }}>📄</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>Skipped</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Completion Time */}
+              {task.completedAt && (
+                <div style={{ padding: '10px 14px', background: 'rgba(16,185,129,0.06)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 16 }}>🕐</span>
+                  <div>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>DELIVERED AT</span>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#34D399', marginTop: 2 }}>{formatTime(task.completedAt)}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
