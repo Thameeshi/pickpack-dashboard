@@ -1,6 +1,7 @@
-import { collection, getDocs, doc, updateDoc, query, where, onSnapshot } from 'firebase/firestore';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
+import { initializeApp, deleteApp } from 'firebase/app';
 import { UserProfile, AccountStatus, Driver } from '../types';
 
 export async function getAllUsers(): Promise<UserProfile[]> {
@@ -68,7 +69,7 @@ export async function updateUserPasswordDirectly(userId: string, userEmail: stri
       );
 
       if (response.ok) {
-        const result = await response.json();
+        await response.json();
         
         // Log the password update in Firestore
         await updateDoc(doc(db, 'users', userId), {
@@ -82,7 +83,7 @@ export async function updateUserPasswordDirectly(userId: string, userEmail: stri
           message: `Password has been updated for ${userEmail}`
         };
       }
-    } catch (functionError) {
+    } catch {
       console.log('Cloud Function not available, using fallback method...');
     }
 
@@ -100,8 +101,69 @@ export async function updateUserPasswordDirectly(userId: string, userEmail: stri
       success: true,
       message: `Password reset initiated for ${userEmail}. User will need to complete password change on next login.`
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update password';
     console.error('Password update error:', error);
-    throw new Error(error.message || 'Failed to update password');
+    const err = new Error(errorMessage);
+    if (error instanceof Error) (err as Error & { cause?: Error }).cause = error;
+    throw err;
+  }
+}
+
+// Create a new supervisor
+export async function createSupervisor(
+  email: string,
+  password: string,
+  name: string,
+  phone: string
+): Promise<UserProfile> {
+  try {
+    // Get Firebase config from environment
+    const firebaseConfig = {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    };
+
+    // Create a secondary app to avoid signing out the current admin
+    const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp_" + Date.now());
+    const secondaryAuth = getAuth(secondaryApp);
+    
+    // Create user in Firebase Auth
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    const user = cred.user;
+
+    // Create user profile in Firestore
+    const profile: UserProfile = {
+      uid: user.uid,
+      email,
+      name,
+      displayName: name,
+      phone,
+      role: 'supervisor',
+      status: 'approved', // Admin-created supervisors are auto-approved
+      language: 'en',
+      createdAt: new Date().toISOString(),
+      approvedBy: auth.currentUser?.uid,
+      approvedAt: new Date().toISOString(),
+    };
+
+    // Use the primary db with admin auth
+    await setDoc(doc(db, 'users', user.uid), profile);
+    
+    // Clean up secondary auth and app
+    await signOut(secondaryAuth);
+    await deleteApp(secondaryApp);
+    
+    return profile;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create supervisor';
+    console.error('Create supervisor error:', error);
+    const err = new Error(errorMessage);
+    if (error instanceof Error) (err as Error & { cause?: Error }).cause = error;
+    throw err;
   }
 }

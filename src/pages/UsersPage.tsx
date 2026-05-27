@@ -2,17 +2,17 @@ import { useEffect, useState } from 'react';
 import { getAllUsers, updateUserStatus, updateUserRole } from '../services/userService';
 import { UserProfile } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Shield, ShieldCheck, X } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
+import CreateSupervisorModal from '../components/CreateSupervisorModal';
 
 export default function UsersPage() {
   const { profile } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [editUser, setEditUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const refresh = async () => { setLoading(true); const u = await getAllUsers(); setUsers(u); setLoading(false); };
+  const refresh = async () => { const u = await getAllUsers(); setUsers(u); };
   useEffect(() => { refresh(); }, []);
 
   if (profile?.role !== 'superadmin') {
@@ -37,7 +37,28 @@ export default function UsersPage() {
 
   return (
     <>
-      <div className="page-header"><div className="page-header-left"><h2>User Management</h2><p>{users.length} total users</p></div></div>
+      <div className="page-header"><div className="page-header-left"><h2>User Management</h2><p>{users.length} total users</p></div>
+      <button 
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 16px',
+          background: 'var(--primary)',
+          color: 'white',
+          border: 'none',
+          borderRadius: 6,
+          fontSize: 14,
+          fontWeight: 600,
+          cursor: 'pointer',
+          transition: 'all 0.2s'
+        }}
+        onClick={() => setShowCreateModal(true)}
+      >
+        <Plus size={16} />
+        Create Supervisor
+      </button>
+      </div>
       <div className="page-content">
         <div className="filters-row">
           <div className="search-box"><Search size={16} /><input placeholder="Search users..." value={search} onChange={e => setSearch(e.target.value)} /></div>
@@ -58,7 +79,7 @@ export default function UsersPage() {
                     </div>
                   </td>
                   <td>
-                    <select className="form-select" style={{ width: 'auto', padding: '4px 8px', fontSize: 12, background: 'transparent' }} value={u.role} onChange={e => handleRoleChange(u.uid, e.target.value as any)} disabled={u.uid === profile.uid}>
+                    <select className="form-select" style={{ width: 'auto', padding: '4px 8px', fontSize: 12, background: 'transparent' }} value={u.role} onChange={e => handleRoleChange(u.uid, e.target.value as UserProfile['role'])} disabled={u.uid === profile.uid}>
                       <option value="driver">Driver</option><option value="supervisor">Supervisor</option><option value="superadmin">Super Admin</option>
                     </select>
                   </td>
@@ -78,6 +99,11 @@ export default function UsersPage() {
           </table>
         </div>
       </div>
+      <CreateSupervisorModal 
+        isOpen={showCreateModal} 
+        onClose={() => setShowCreateModal(false)} 
+        onSuccess={() => refresh()} 
+      />
     </>
   );
 }
