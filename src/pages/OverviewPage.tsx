@@ -55,7 +55,9 @@ export default function OverviewPage() {
         </div>
       </div>
       <div className="page-content">
-        <div className="stats-grid">
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-icon">📦</div>
             <div className="stat-value">{activeTasks.length}</div>
@@ -134,10 +136,45 @@ export default function OverviewPage() {
               ) : (
                 activeTrips.map(t => (
                   <div key={t.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>{t.driverName}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Started {timeAgo(t.startTime)}</div>
-                    </div>
+                        </div>
+                        {/* Prominent Ongoing Trips card */}
+                        <div className="card" style={{ marginTop: 20 }}>
+                          <div className="card-header">
+                            <span className="card-title">Ongoing trips</span>
+                            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{activeTrips.length} active</span>
+                          </div>
+                          <div style={{ padding: 16 }}>
+                            {activeTrips.length === 0 ? (
+                              <div style={{ padding: 24, borderRadius: 8, background: 'var(--bg-muted)', textAlign: 'center' }}>
+                                <div style={{ fontSize: 32 }}>🚚</div>
+                                <div style={{ marginTop: 8, color: 'var(--text-muted)' }}>No ongoing trips right now.</div>
+                              </div>
+                            ) : (
+                              activeTrips.map(t => (
+                                <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                    <div style={{ width: 44, height: 44, borderRadius: 22, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
+                                      {t.driverName?.[0]?.toUpperCase() || 'D'}
+                                    </div>
+                                    <div>
+                                      <div style={{ fontWeight: 700 }}>{t.driverName}</div>
+                                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t.startLocation || '—'} → {t.endLocation || '—'}</div>
+                                    </div>
+                                  </div>
+                                  <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Started {timeAgo(t.startTime)}</div>
+                                    <a href="/trips" style={{ marginTop: 6, display: 'inline-block', color: 'var(--primary)', fontWeight: 600 }}>View</a>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ width: 360 }}>
+                        {/* Right column originally containing Active Trips + Pending Fuel */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <span className="badge badge-success">Active</span>
                   </div>
                 ))
