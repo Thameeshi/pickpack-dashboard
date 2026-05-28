@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { subscribeToNotifications } from '../services/notificationService';
 import { AppNotification } from '../types';
-import { LayoutDashboard, Truck, ClipboardList, Navigation, Fuel, Users, Bell, LogOut, Menu, X, MapPin, PenTool, Settings, Key } from 'lucide-react';
+import { LayoutDashboard, Truck, ClipboardList, Navigation, Fuel, Users, Bell, LogOut, Menu, X, MapPin, PenTool, Settings, Key, FileText } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { profile, logout } = useAuth();
@@ -50,6 +50,9 @@ export default function DashboardLayout() {
           </NavLink>
           <NavLink to="/live-map" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <MapPin size={20} /> Live Map
+          </NavLink>
+          <NavLink to="/reports" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
+            <FileText size={20} /> Reports
           </NavLink>
           <div className="nav-section-label">Management</div>
           <NavLink to="/notifications" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>

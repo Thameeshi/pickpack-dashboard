@@ -47,59 +47,44 @@ export async function updateUserPasswordDirectly(userId: string, userEmail: stri
 
     const token = await currentUser.getIdToken();
 
-    // Try Cloud Function first (if deployed)
-    try {
-      const functionUrl = import.meta.env.VITE_FIREBASE_FUNCTION_URL || 
-        `https://us-central1-${import.meta.env.VITE_FIREBASE_PROJECT_ID}.cloudfunctions.net`;
-      
-      const response = await fetch(
-        `${functionUrl}/updateUserPassword`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            uid: userId,
-            email: userEmail,
-            newPassword: newPassword,
-          }),
-        }
-      );
+    // Update password via Cloud Function (required)
+    const functionUrl =
+      import.meta.env.VITE_FIREBASE_FUNCTION_URL ||
+      `https://us-central1-${import.meta.env.VITE_FIREBASE_PROJECT_ID}.cloudfunctions.net`;
 
-      if (response.ok) {
-        await response.json();
-        
-        // Log the password update in Firestore
-        await updateDoc(doc(db, 'users', userId), {
-          passwordUpdatedAt: new Date().toISOString(),
-          passwordUpdatedBy: currentUser.uid,
-          temporaryPassword: false
-        });
+    const response = await fetch(`${functionUrl}/updateUserPassword`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        uid: userId,
+        email: userEmail,
+        newPassword: newPassword,
+      }),
+    });
 
-        return {
-          success: true,
-          message: `Password has been updated for ${userEmail}`
-        };
-      }
-    } catch {
-      console.log('Cloud Function not available, using fallback method...');
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const msg =
+        (payload && (payload.error || payload.message)) ||
+        `Password update failed (HTTP ${response.status})`;
+      throw new Error(msg);
     }
 
-    // Fallback: Store temporary password for user to set on next login
+    // Log the password update in Firestore (dashboard indicators)
     await updateDoc(doc(db, 'users', userId), {
-      temporaryPassword: true,
-      tempPasswordSetAt: new Date().toISOString(),
-      passwordUpdatedBy: currentUser.uid,
       passwordUpdatedAt: new Date().toISOString(),
-      // Note: Don't store actual password in Firestore for security
-      passwordResetRequired: true
+      passwordUpdatedBy: currentUser.uid,
+      temporaryPassword: false,
+      passwordResetRequired: false,
+      tempPasswordSetAt: null,
     });
 
     return {
       success: true,
-      message: `Password reset initiated for ${userEmail}. User will need to complete password change on next login.`
+      message: `Password has been updated for ${userEmail}`,
     };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to update password';
