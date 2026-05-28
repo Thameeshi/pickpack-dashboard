@@ -68,6 +68,7 @@ export interface Task {
   qrCode?: string;
   routeId?: string;
   tripId?: string;
+  invoiceId?: string;
   driverAccepted?: boolean;
   acceptedAt?: number;
   rejectedReason?: string;
@@ -79,6 +80,40 @@ export interface Task {
   itemCount?: number;
   estimatedDeliveryTime?: string;
   recipientConfirmedName?: string;
+}
+
+// ===== INVOICE TYPES =====
+export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'overdue';
+
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+}
+
+export interface InvoiceRecord {
+  id?: string;
+  taskId: string;
+  tripId?: string;
+  driverId: string;
+  driverName: string;
+  supervisorId: string;
+  supervisorName?: string;
+  recipientName: string;
+  recipientPhone?: string;
+  routeLabel?: string;
+  items: InvoiceItem[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  total: number;
+  status: InvoiceStatus;
+  dueAt?: number;
+  generatedBy: string;
+  generatedByRole: UserRole;
+  createdAt: number;
+  updatedAt: number;
 }
 
 // ===== TRIP SESSION TYPES =====

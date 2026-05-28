@@ -158,7 +158,7 @@ function AssignModal({ task, drivers, onClose }: { task: Task; drivers: UserProf
   const [driverId, setDriverId] = useState('');
   const handleAssign = async () => {
     const driver = drivers.find(d => d.uid === driverId);
-    if (driver) { await assignTaskToDriver(task.id!, driverId, driver.name); onClose(); }
+    if (driver) { await assignTaskToDriver(task.id!, driverId, driver.name, profile?.uid, profile?.name || 'Supervisor'); onClose(); }
   };
   return (
     <div className="modal-overlay" onClick={onClose}>
