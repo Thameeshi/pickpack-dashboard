@@ -14,6 +14,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import LiveMapPage from './pages/LiveMapPage';
 import SettingsPage from './pages/SettingsPage';
 import ReportsPage from './pages/ReportsPage';
+import LocationsPage from './pages/LocationsPage';
 import './index.css';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,7 @@ function AppRoutes() {
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="locations" element={<LocationsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

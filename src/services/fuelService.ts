@@ -20,6 +20,20 @@ export async function updateFuelExpenseStatus(
   expenseId: string, status: ExpenseStatus, approvedBy?: string
 ): Promise<void> {
   const updates: Partial<FuelExpense> = { status };
+  if (status === 'approved') {
+    updates.paymentStatus = 'unpaid'; // Set default payment status when approved
+  }
   if (approvedBy) updates.approvedBy = approvedBy;
+  await updateDoc(doc(db, 'fuelExpenses', expenseId), updates);
+}
+
+export async function updateFuelExpensePaymentStatus(
+  expenseId: string, paymentStatus: 'unpaid' | 'transferred', paidBy?: string
+): Promise<void> {
+  const updates: Partial<FuelExpense> = { paymentStatus };
+  if (paidBy) {
+    updates.paidBy = paidBy;
+    updates.paidAt = Date.now();
+  }
   await updateDoc(doc(db, 'fuelExpenses', expenseId), updates);
 }

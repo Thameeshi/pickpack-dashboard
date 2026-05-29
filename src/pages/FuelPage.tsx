@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { subscribeToFuelExpenses, updateFuelExpenseStatus } from '../services/fuelService';
+import { subscribeToFuelExpenses, updateFuelExpenseStatus, updateFuelExpensePaymentStatus } from '../services/fuelService';
 import { FuelExpense } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { Search, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
@@ -25,6 +25,7 @@ export default function FuelPage() {
 
   const handleApprove = async (id: string) => { await updateFuelExpenseStatus(id, 'approved', profile?.uid); };
   const handleReject = async (id: string) => { await updateFuelExpenseStatus(id, 'rejected', profile?.uid); };
+  const handleMarkPaid = async (id: string) => { await updateFuelExpensePaymentStatus(id, 'transferred', profile?.uid); };
 
   return (
     <>
@@ -54,7 +55,18 @@ export default function FuelPage() {
                   <td><span className={`badge ${f.fuelType === 'diesel' ? 'badge-info' : 'badge-warning'}`}>{f.fuelType}</span></td>
                   <td>{f.litres}L</td>
                   <td style={{ fontWeight: 600 }}>LKR {f.totalCost?.toFixed(0)}</td>
-                  <td><span className={`badge ${f.status === 'approved' ? 'badge-success' : f.status === 'pending' ? 'badge-warning' : 'badge-danger'}`}>{f.status}</span></td>
+                  <td>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                      <span className={`badge ${f.status === 'approved' ? 'badge-success' : f.status === 'pending' ? 'badge-warning' : 'badge-danger'}`}>
+                        {f.status}
+                      </span>
+                      {f.status === 'approved' && (
+                        <span className={`badge ${f.paymentStatus === 'transferred' ? 'badge-info' : 'badge-default'}`} style={{ fontSize: 10, padding: '2px 6px' }}>
+                          {f.paymentStatus === 'transferred' ? 'Paid' : 'Unpaid'}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td>{f.receiptUrl ? <a href={f.receiptUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-light)', display: 'flex', alignItems: 'center', gap: 4 }}><ExternalLink size={13} />View</a> : '—'}</td>
                   <td>
                     {f.status === 'pending' && (
@@ -62,6 +74,11 @@ export default function FuelPage() {
                         <button className="btn btn-success btn-sm" onClick={() => handleApprove(f.id!)}><CheckCircle size={13} /> Approve</button>
                         <button className="btn btn-danger btn-sm" onClick={() => handleReject(f.id!)}><XCircle size={13} /> Reject</button>
                       </div>
+                    )}
+                    {f.status === 'approved' && f.paymentStatus !== 'transferred' && (
+                      <button className="btn btn-primary btn-sm" onClick={() => handleMarkPaid(f.id!)}>
+                        <CheckCircle size={13} /> Transfer Money
+                      </button>
                     )}
                   </td>
                 </tr>

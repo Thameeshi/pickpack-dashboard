@@ -100,7 +100,10 @@ export async function createSupervisor(
   email: string,
   password: string,
   name: string,
-  phone: string
+  phone: string,
+  assignedLocationId?: string,
+  assignedLocationName?: string,
+  assignedLocationType?: string
 ): Promise<UserProfile> {
   try {
     // Get Firebase config from environment
@@ -134,6 +137,9 @@ export async function createSupervisor(
       createdAt: new Date().toISOString(),
       approvedBy: auth.currentUser?.uid,
       approvedAt: new Date().toISOString(),
+      assignedLocationId,
+      assignedLocationName,
+      assignedLocationType,
     };
 
     // Use the primary db with admin auth

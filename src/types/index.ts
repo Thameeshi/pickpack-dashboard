@@ -22,6 +22,9 @@ export interface UserProfile {
   department?: string;
   employeeId?: string;
   supervisorId?: string;
+  assignedLocationId?: string;
+  assignedLocationName?: string;
+  assignedLocationType?: string;
 }
 
 export interface Driver {
@@ -170,6 +173,9 @@ export interface FuelExpense {
   receiptUrl?: string;
   status: ExpenseStatus;
   approvedBy?: string;
+  paymentStatus?: 'unpaid' | 'transferred';
+  paidBy?: string;
+  paidAt?: number;
   notes?: string;
   createdAt: number;
 }

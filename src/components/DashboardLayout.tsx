@@ -64,6 +64,9 @@ export default function DashboardLayout() {
               <NavLink to="/users" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
                 <Users size={20} /> User Management
               </NavLink>
+              <NavLink to="/locations" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
+                <MapPin size={20} /> Locations
+              </NavLink>
               <NavLink to="/password-reset" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
                 <Key size={20} /> Password Reset
               </NavLink>

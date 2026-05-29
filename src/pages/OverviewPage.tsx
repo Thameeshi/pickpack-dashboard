@@ -165,33 +165,27 @@ export default function OverviewPage() {
           <div style={{ flex: 1 }}>
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-icon">📦</div>
                 <div className="stat-value">{activeTasks.length}</div>
                 <div className="stat-label">Active Tasks</div>
               </div>
               <div className="stat-card">
-                <div className="stat-icon">✅</div>
                 <div className="stat-value">{deliveredToday.length}</div>
                 <div className="stat-label">Delivered Today</div>
               </div>
               <div className="stat-card">
-                <div className="stat-icon">🚚</div>
                 <div className="stat-value">{activeTrips.length}</div>
                 <div className="stat-label">Active Trips</div>
               </div>
               <div className="stat-card">
-                <div className="stat-icon">👤</div>
                 <div className="stat-value">{approvedDrivers.length}</div>
                 <div className="stat-label">Active Drivers</div>
                 {pendingDrivers.length > 0 && <div className="stat-change negative">+{pendingDrivers.length} pending</div>}
               </div>
               <div className="stat-card">
-                <div className="stat-icon">⛽</div>
                 <div className="stat-value">{pendingFuel.length}</div>
                 <div className="stat-label">Pending Fuel Claims</div>
               </div>
               <div className="stat-card">
-                <div className="stat-icon">💰</div>
                 <div className="stat-value">LKR {totalFuelCost.toLocaleString()}</div>
                 <div className="stat-label">Total Fuel Spend</div>
               </div>
