@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { subscribeToNotifications } from '../services/notificationService';
 import { AppNotification } from '../types';
-import { LayoutDashboard, Truck, ClipboardList, Navigation, Fuel, Users, Bell, LogOut, Menu, X, MapPin, PenTool, Settings, Key } from 'lucide-react';
+import { LayoutDashboard, Truck, ClipboardList, Navigation, Fuel, Users, Bell, LogOut, Menu, X, MapPin, PenTool, Settings, Key, FileText } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { profile, logout } = useAuth();
@@ -51,6 +51,9 @@ export default function DashboardLayout() {
           <NavLink to="/live-map" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <MapPin size={20} /> Live Map
           </NavLink>
+          <NavLink to="/reports" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
+            <FileText size={20} /> Reports
+          </NavLink>
           <div className="nav-section-label">Management</div>
           <NavLink to="/notifications" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <Bell size={20} /> Notifications
@@ -60,6 +63,9 @@ export default function DashboardLayout() {
             <>
               <NavLink to="/users" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
                 <Users size={20} /> User Management
+              </NavLink>
+              <NavLink to="/locations" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
+                <MapPin size={20} /> Locations
               </NavLink>
               <NavLink to="/password-reset" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
                 <Key size={20} /> Password Reset

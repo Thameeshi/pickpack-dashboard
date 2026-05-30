@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, AlertCircle, CheckCircle, Eye, EyeOff, Plus } from 'lucide-react';
 import { createSupervisor } from '../services/userService';
+import { subscribeToLocations, LocationRecord } from '../services/locationService';
 
 interface CreateSupervisorModalProps {
   isOpen: boolean;
@@ -24,6 +25,18 @@ export default function CreateSupervisorModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Assigned location states
+  const [locations, setLocations] = useState<LocationRecord[]>([]);
+  const [assignedType, setAssignedType] = useState<'warehouse' | 'supermarket' | ''>('');
+  const [assignedLocId, setAssignedLocId] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      const unsub = subscribeToLocations(setLocations);
+      return () => unsub();
+    }
+  }, [isOpen]);
+
   const validateForm = () => {
     if (!email || !password || !confirmPassword || !name || !phone) {
       setError('All fields are required');
@@ -45,6 +58,11 @@ export default function CreateSupervisorModal({
       setError('Please enter a valid phone number');
       return false;
     }
+    // If a type is selected, location is required
+    if (assignedType && !assignedLocId) {
+      setError(`Please select a ${assignedType}`);
+      return false;
+    }
     return true;
   };
 
@@ -54,7 +72,16 @@ export default function CreateSupervisorModal({
 
     setLoading(true);
     try {
-      await createSupervisor(email, password, name, phone);
+      const selectedLoc = locations.find(l => l.id === assignedLocId);
+      await createSupervisor(
+        email,
+        password,
+        name,
+        phone,
+        assignedLocId || undefined,
+        selectedLoc?.name || undefined,
+        assignedType || undefined
+      );
       setSuccess(true);
       setTimeout(() => {
         onSuccess();
@@ -64,6 +91,8 @@ export default function CreateSupervisorModal({
         setConfirmPassword('');
         setName('');
         setPhone('');
+        setAssignedType('');
+        setAssignedLocId('');
         setSuccess(false);
       }, 2000);
     } catch (err: unknown) {
@@ -80,6 +109,8 @@ export default function CreateSupervisorModal({
     setConfirmPassword('');
     setName('');
     setPhone('');
+    setAssignedType('');
+    setAssignedLocId('');
     setError(null);
     setSuccess(false);
     onClose();
@@ -278,6 +309,103 @@ export default function CreateSupervisorModal({
                   }}
                   disabled={loading}
                 />
+              </div>
+
+              {/* Assigned Location */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  marginBottom: 8
+                }}>
+                  Assign Location (optional)
+                </label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (assignedType === 'warehouse') {
+                        setAssignedType('');
+                        setAssignedLocId('');
+                      } else {
+                        setAssignedType('warehouse');
+                        setAssignedLocId('');
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      border: '1px solid #E5E7EB',
+                      backgroundColor: assignedType === 'warehouse' ? 'var(--primary)' : 'white',
+                      color: assignedType === 'warehouse' ? 'white' : 'var(--text-primary)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    disabled={loading}
+                  >
+                    Warehouse
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (assignedType === 'supermarket') {
+                        setAssignedType('');
+                        setAssignedLocId('');
+                      } else {
+                        setAssignedType('supermarket');
+                        setAssignedLocId('');
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      border: '1px solid #E5E7EB',
+                      backgroundColor: assignedType === 'supermarket' ? 'var(--primary)' : 'white',
+                      color: assignedType === 'supermarket' ? 'white' : 'var(--text-primary)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    disabled={loading}
+                  >
+                    Supermarket
+                  </button>
+                </div>
+
+                {assignedType && (
+                  <select
+                    value={assignedLocId}
+                    onChange={e => setAssignedLocId(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: 6,
+                      fontSize: 14,
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit',
+                      background: 'white',
+                      color: 'var(--text-primary)'
+                    }}
+                    disabled={loading}
+                  >
+                    <option value="">-- Select {assignedType === 'warehouse' ? 'Warehouse' : 'Supermarket'} --</option>
+                    {locations
+                      .filter(l => l.type === assignedType)
+                      .map(l => (
+                        <option key={l.id} value={l.id}>
+                          {l.name} {l.address ? `(${l.address})` : ''}
+                        </option>
+                      ))}
+                  </select>
+                )}
               </div>
 
               {/* Password */}

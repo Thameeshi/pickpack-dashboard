@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { subscribeToTrips } from '../services/tripService';
+import { subscribeToTrips, cleanupAllOrphanedTrips, cancelTrip } from '../services/tripService';
 import { TripSession } from '../types';
 import { Search } from 'lucide-react';
 
@@ -15,6 +15,7 @@ export default function TripsPage() {
   const [trips, setTrips] = useState<TripSession[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const [cleaning, setCleaning] = useState(false);
 
   useEffect(() => { return subscribeToTrips(setTrips); }, []);
 
@@ -29,10 +30,42 @@ export default function TripsPage() {
   const totalDistance = trips.reduce((s, t) => s + (t.totalDistance || 0), 0);
   const totalDeliveries = trips.reduce((s, t) => s + (t.deliveriesCompleted || 0), 0);
 
+  const handleCleanup = async () => {
+    if (!confirm('This will cancel duplicate active trips, keeping only the newest per driver. Continue?')) return;
+    setCleaning(true);
+    try {
+      const count = await cleanupAllOrphanedTrips();
+      alert(`Cleaned up ${count} orphaned trip(s). The list will update automatically.`);
+    } catch (e: any) {
+      alert('Cleanup failed: ' + (e.message || e));
+    } finally {
+      setCleaning(false);
+    }
+  };
+
+  const handleCancelTrip = async (tripId: string, driverName: string) => {
+    if (!confirm(`Cancel active trip for ${driverName}?`)) return;
+    try {
+      await cancelTrip(tripId);
+    } catch (e: any) {
+      alert('Failed to cancel trip: ' + (e.message || e));
+    }
+  };
+
   return (
     <>
       <div className="page-header">
         <div className="page-header-left"><h2>Trips</h2><p>{trips.length} total trips</p></div>
+        {activeCount > 1 && (
+          <button
+            className="btn btn-primary"
+            onClick={handleCleanup}
+            disabled={cleaning}
+            style={{ background: '#e53e3e', border: 'none', padding: '8px 16px', borderRadius: 8, color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: cleaning ? 0.6 : 1 }}
+          >
+            {cleaning ? 'Cleaning...' : `🧹 Clean Up Duplicates (${activeCount} active)`}
+          </button>
+        )}
       </div>
       <div className="page-content">
         <div className="stats-grid">
@@ -51,7 +84,7 @@ export default function TripsPage() {
         </div>
         <div className="table-container">
           <table>
-            <thead><tr><th>Driver</th><th>Status</th><th>Start</th><th>Duration</th><th>Distance</th><th>Deliveries</th><th>Fuel Cost</th></tr></thead>
+            <thead><tr><th>Driver</th><th>Status</th><th>Start</th><th>Duration</th><th>Distance</th><th>Deliveries</th><th>Fuel Cost</th><th>Actions</th></tr></thead>
             <tbody>
               {filtered.map(t => (
                 <tr key={t.id}>
@@ -62,9 +95,19 @@ export default function TripsPage() {
                   <td>{t.totalDistance ? `${t.totalDistance.toFixed(1)} km` : '—'}</td>
                   <td>{t.deliveriesCompleted || 0} ✅ / {t.deliveriesFailed || 0} ❌</td>
                   <td>{t.totalFuelCost ? `LKR ${t.totalFuelCost.toFixed(0)}` : '—'}</td>
+                  <td>
+                    {t.status === 'active' && (
+                      <button
+                        onClick={() => handleCancelTrip(t.id!, t.driverName)}
+                        style={{ background: '#fed7d7', color: '#c53030', border: '1px solid #feb2b2', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No trips found</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No trips found</td></tr>}
             </tbody>
           </table>
         </div>
