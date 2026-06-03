@@ -1,4 +1,4 @@
-import { collection, getDocs, getDoc, doc, updateDoc, setDoc, deleteDoc, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc, updateDoc, setDoc, deleteDoc, query, where, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { InvoiceRecord, Task, TaskStatus, TaskPriority } from '../types';
 

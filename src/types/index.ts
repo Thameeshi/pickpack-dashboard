@@ -263,3 +263,40 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   delivered: 'Delivered',
   failed: 'Failed',
 };
+
+// ===== REVIEW & SETTINGS TYPES =====
+export interface DriverReview {
+  id?: string;
+  driverId: string;
+  driverName: string;
+  rating: number; // 1 to 5
+  comment: string;
+  createdAt: number;
+  reviewerName: string;
+  taskId?: string;
+}
+
+export interface SupervisorModulesSettings {
+  overview: boolean;
+  drivers: boolean;
+  tasks: boolean;
+  trips: boolean;
+  fuel: boolean;
+  repairs: boolean;
+  liveMap: boolean;
+  reports: boolean;
+  notifications: boolean;
+}
+
+export const DEFAULT_SUPERVISOR_MODULES: SupervisorModulesSettings = {
+  overview: true,
+  drivers: true,
+  tasks: true,
+  trips: true,
+  fuel: true,
+  repairs: true,
+  liveMap: true,
+  reports: true,
+  notifications: true,
+};
+
