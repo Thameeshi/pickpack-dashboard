@@ -158,3 +158,10 @@ export async function createSupervisor(
     throw err;
   }
 }
+
+export async function getSupervisors(): Promise<UserProfile[]> {
+  const q = query(collection(db, 'users'), where('role', '==', 'supervisor'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile));
+}
+

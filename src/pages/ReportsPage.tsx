@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Download, FileText, CalendarDays, UserRound, Filter, Sparkles } from 'lucide-react';
 import { getAllTasks } from '../services/taskService';
 import { getAllUsers } from '../services/userService';
-import { Task, UserProfile } from '../types';
+import { getAllTrips } from '../services/tripService';
+import { Task, UserProfile, TripSession } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
 type ReportRange = 'weekly' | 'monthly';
@@ -27,8 +28,8 @@ type DeliveryDetailRow = {
   recipientPhone: string;
   pickupLocation: string;
   deliveryLocation: string;
-  pickupCoords: string;
-  deliveryCoords: string;
+  distance: string;
+  timeSpent: string;
   status: string;
   createdAt: string;
   assignedAt: string;
@@ -44,10 +45,67 @@ type GeneratedReport = {
 
 const ON_TIME_WINDOW_MS = 6 * 60 * 60 * 1000;
 
+function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the Earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+      Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+const getRealDistance = (task: Task, tripsList: TripSession[]): string => {
+  if (task.tripId) {
+    const trip = tripsList.find(tr => tr.id === task.tripId);
+    if (trip && trip.totalDistance != null && trip.totalDistance > 0) {
+      return `${trip.totalDistance.toFixed(1)} km`;
+    }
+  }
+  if (
+    task.pickupLatitude != null &&
+    task.pickupLongitude != null &&
+    task.deliveryLatitude != null &&
+    task.deliveryLongitude != null
+  ) {
+    const d = haversineDistance(
+      task.pickupLatitude,
+      task.pickupLongitude,
+      task.deliveryLatitude,
+      task.deliveryLongitude
+    );
+    if (d > 0) {
+      return `${d.toFixed(1)} km`;
+    }
+  }
+  return '—';
+};
+
+const getRealDuration = (task: Task): string => {
+  if (task.status !== 'delivered') return '—';
+  const startedAt = task.acceptedAt || task.assignedAt || task.createdAt;
+  const finishedAt = task.completedAt || task.updatedAt;
+  if (!startedAt || !finishedAt) return '—';
+  const diffMs = finishedAt - startedAt;
+  if (diffMs <= 0) return '—';
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 60) {
+    return `${diffMins} mins`;
+  }
+  const hours = Math.floor(diffMins / 60);
+  const mins = diffMins % 60;
+  return `${hours}h ${mins}m`;
+};
+
 export default function ReportsPage() {
   const { profile } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [trips, setTrips] = useState<TripSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<ReportRange>('weekly');
   const [selectedDriverId, setSelectedDriverId] = useState<string>('all');
@@ -57,9 +115,14 @@ export default function ReportsPage() {
     (async () => {
       setLoading(true);
       try {
-        const [allTasks, allUsers] = await Promise.all([getAllTasks(), getAllUsers()]);
+        const [allTasks, allUsers, allTrips] = await Promise.all([
+          getAllTasks(),
+          getAllUsers(),
+          getAllTrips(),
+        ]);
         setTasks(allTasks);
         setUsers(allUsers);
+        setTrips(allTrips);
       } finally {
         setLoading(false);
       }
@@ -155,10 +218,8 @@ export default function ReportsPage() {
         recipientPhone: t.recipientPhone || 'N/A',
         pickupLocation: t.pickupLocation || 'N/A',
         deliveryLocation: t.deliveryLocation || 'N/A',
-        pickupCoords:
-          t.pickupLatitude != null && t.pickupLongitude != null ? `${t.pickupLatitude.toFixed(5)}, ${t.pickupLongitude.toFixed(5)}` : 'N/A',
-        deliveryCoords:
-          t.deliveryLatitude != null && t.deliveryLongitude != null ? `${t.deliveryLatitude.toFixed(5)}, ${t.deliveryLongitude.toFixed(5)}` : 'N/A',
+        distance: getRealDistance(t, trips),
+        timeSpent: getRealDuration(t),
         status: t.status,
         createdAt: t.createdAt ? new Date(t.createdAt).toLocaleString() : 'N/A',
         assignedAt: t.assignedAt ? new Date(t.assignedAt).toLocaleString() : 'N/A',
@@ -217,8 +278,8 @@ export default function ReportsPage() {
             <td>${d.recipientPhone}</td>
             <td>${d.pickupLocation}</td>
             <td>${d.deliveryLocation}</td>
-            <td>${d.pickupCoords}</td>
-            <td>${d.deliveryCoords}</td>
+            <td>${d.distance}</td>
+            <td>${d.timeSpent}</td>
             <td>${d.status}</td>
             <td>${d.createdAt}</td>
             <td>${d.assignedAt}</td>
@@ -254,7 +315,7 @@ th{background:#f5f5f5}
 </table>
 <h2 style="margin-top:24px;">Delivery Details</h2>
 <table>
-<thead><tr><th>Driver</th><th>Supervisor</th><th>Recipient</th><th>Phone</th><th>Pickup</th><th>Delivery</th><th>Pickup Coords</th><th>Delivery Coords</th><th>Status</th><th>Created</th><th>Assigned</th><th>Completed</th></tr></thead>
+<thead><tr><th>Driver</th><th>Supervisor</th><th>Recipient</th><th>Phone</th><th>Pickup</th><th>Delivery</th><th>Distance</th><th>Time Spent</th><th>Status</th><th>Created</th><th>Assigned</th><th>Completed</th></tr></thead>
 <tbody>${detailsRows || '<tr><td colspan="12">No delivery detail rows</td></tr>'}</tbody>
 </table>
 </body></html>`;
@@ -421,8 +482,8 @@ th{background:#f5f5f5}
                     <th>Phone</th>
                     <th>Pickup Location</th>
                     <th>Delivery Location</th>
-                    <th>Pickup Coords</th>
-                    <th>Delivery Coords</th>
+                    <th>Distance</th>
+                    <th>Time Spent</th>
                     <th>Status</th>
                     <th>Created</th>
                     <th>Assigned</th>
@@ -438,8 +499,8 @@ th{background:#f5f5f5}
                       <td>{d.recipientPhone}</td>
                       <td>{d.pickupLocation}</td>
                       <td>{d.deliveryLocation}</td>
-                      <td>{d.pickupCoords}</td>
-                      <td>{d.deliveryCoords}</td>
+                      <td>{d.distance}</td>
+                      <td>{d.timeSpent}</td>
                       <td>
                         <span className={`badge ${
                           d.status === 'delivered'

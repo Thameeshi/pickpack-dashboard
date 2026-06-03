@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react';
 import { getDrivers, updateUserStatus, subscribeToDriverLocations } from '../services/userService';
 import { createNotification } from '../services/notificationService';
 import { getTripsByDriver } from '../services/tripService';
-import { UserProfile, Driver, TripSession } from '../types';
+import { subscribeToDriverReviews } from '../services/settingsService';
+import { UserProfile, Driver, TripSession, DriverReview } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, CheckCircle, XCircle, Eye, X } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Eye, X, Star } from 'lucide-react';
 
 export default function DriversPage() {
   const { profile } = useAuth();
   const [drivers, setDrivers] = useState<UserProfile[]>([]);
   const [liveDrivers, setLiveDrivers] = useState<Driver[]>([]);
+  const [reviews, setReviews] = useState<DriverReview[]>([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [selected, setSelected] = useState<UserProfile | null>(null);
@@ -25,8 +27,12 @@ export default function DriversPage() {
 
   useEffect(() => {
     refresh();
-    const unsub = subscribeToDriverLocations(setLiveDrivers);
-    return unsub;
+    const unsubLive = subscribeToDriverLocations(setLiveDrivers);
+    const unsubReviews = subscribeToDriverReviews(setReviews);
+    return () => {
+      unsubLive();
+      unsubReviews();
+    };
   }, []);
 
   useEffect(() => {
@@ -69,6 +75,17 @@ export default function DriversPage() {
     if (selected?.uid === d.uid) setSelected(prev => prev ? { ...prev, status } : null);
   };
 
+  // Helper to calculate rating for a driver
+  const getDriverRatingStats = (driverId: string) => {
+    const driverReviews = reviews.filter(r => r.driverId === driverId);
+    if (driverReviews.length === 0) return { avg: '—', count: 0 };
+    const avg = (driverReviews.reduce((sum, r) => sum + r.rating, 0) / driverReviews.length).toFixed(1);
+    return { avg, count: driverReviews.length };
+  };
+
+  const selectedReviews = selected ? reviews.filter(r => r.driverId === selected.uid) : [];
+  const selectedStats = selected ? getDriverRatingStats(selected.uid) : { avg: '—', count: 0 };
+
   return (
     <>
       <div className="page-header">
@@ -98,6 +115,7 @@ export default function DriversPage() {
                 <th>Driver</th>
                 <th>Contact</th>
                 <th>Vehicle</th>
+                <th>Rating</th>
                 <th>Status</th>
                 <th>Live</th>
                 <th>Actions</th>
@@ -106,6 +124,7 @@ export default function DriversPage() {
             <tbody>
               {filtered.map(d => {
                 const live = liveMap.get(d.uid);
+                const { avg, count } = getDriverRatingStats(d.uid);
                 return (
                   <tr key={d.uid}>
                     <td>
@@ -121,6 +140,17 @@ export default function DriversPage() {
                     </td>
                     <td>{d.phone || '—'}</td>
                     <td>{d.vehiclePlate || '—'} {d.vehicleType ? `• ${d.vehicleType}` : ''}</td>
+                    <td>
+                      {count > 0 ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, fontSize: 13 }}>
+                          <Star size={14} fill="#ffb100" color="#ffb100" />
+                          <span>{avg}</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>({count})</span>
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
+                      )}
+                    </td>
                     <td><StatusBadge status={d.status} /></td>
                     <td>{live ? <span className="badge badge-success">Online</span> : <span className="badge badge-default">Offline</span>}</td>
                     <td>
@@ -144,7 +174,7 @@ export default function DriversPage() {
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No drivers found</td></tr>
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No drivers found</td></tr>
               )}
             </tbody>
           </table>
@@ -174,9 +204,39 @@ export default function DriversPage() {
                   <div className="detail-field"><label>License</label><p>{selected.licenseNumber || '—'}</p></div>
                   <div className="detail-field"><label>Joined</label><p>{selected.createdAt ? new Date(selected.createdAt).toLocaleDateString() : '—'}</p></div>
                   <div className="detail-field"><label>Total Trips</label><p>{trips.length}</p></div>
+                  <div className="detail-field">
+                    <label>Rating</label>
+                    <p style={{ display: 'flex', alignItems: 'center', gap: 4, margin: 0, fontWeight: 600 }}>
+                      <Star size={14} fill={selectedStats.count > 0 ? '#ffb100' : 'none'} color={selectedStats.count > 0 ? '#ffb100' : 'var(--text-muted)'} />
+                      {selectedStats.avg} ({selectedStats.count} reviews)
+                    </p>
+                  </div>
                 </div>
+                
+                {selectedReviews.length > 0 && (
+                  <div style={{ marginTop: 20, borderTop: '1px solid var(--border)', paddingTop: 15 }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Driver Reviews & Comments</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 180, overflowY: 'auto', paddingRight: 4 }}>
+                      {selectedReviews.map(r => (
+                        <div key={r.id} style={{ background: '#f9f9f9', padding: '10px 12px', borderRadius: 6, border: '1px solid var(--border)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{r.reviewerName}</span>
+                            <span style={{ color: 'var(--text-muted)' }}>{new Date(r.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <div style={{ display: 'flex', color: '#ffb100', marginBottom: 6 }}>
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <Star key={s} size={12} fill={s <= r.rating ? '#ffb100' : 'none'} color="#ffb100" />
+                            ))}
+                          </div>
+                          <p style={{ fontSize: 12, margin: 0, fontStyle: 'italic', color: 'var(--text-primary)', lineHeight: 1.4 }}>"{r.comment}"</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {trips.length > 0 && (
-                  <div style={{ marginTop: 20 }}>
+                  <div style={{ marginTop: 20, borderTop: '1px solid var(--border)', paddingTop: 15 }}>
                     <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Recent Trips</h4>
                     {trips.slice(0, 5).map(t => (
                       <div key={t.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>

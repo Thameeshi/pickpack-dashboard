@@ -237,8 +237,7 @@ export default function PasswordResetPage() {
                     style={{
                       borderBottom: '1px solid var(--border)',
                       background: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.02)',
-                      transition: 'background 0.2s',
-                      ':hover': { background: 'var(--surface-secondary)' }
+                      transition: 'background 0.2s'
                     }}
                   >
                     <td style={{ padding: '14px 16px' }}>
