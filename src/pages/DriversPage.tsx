@@ -1,3 +1,13 @@
+/**
+ * DriversPage — Driver Roster & Approvals Management
+ * 
+ * Manages the driver workforce:
+ * 1. Driver Approvals: Evaluates newly registered drivers, approving or suspending their accounts.
+ * 2. Status Tracking: Integrates driver online/offline markers and links with real-time locations.
+ * 3. Detail Modals: Displays detailed stats (odometer history, assigned vehicle number, active trips, performance ratings, and reviews).
+ * 4. Notifications: Automatically generates notifications for drivers upon account approval or suspension.
+ */
+
 import { useEffect, useState } from 'react';
 import { getDrivers, updateUserStatus, subscribeToDriverLocations } from '../services/userService';
 import { createNotification } from '../services/notificationService';

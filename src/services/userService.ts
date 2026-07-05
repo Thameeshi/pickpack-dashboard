@@ -1,8 +1,19 @@
+/**
+ * userService — Dashboard User Profile Management Services
+ * 
+ * Provides database utilities for user management, including:
+ * 1. Fetching user lists and driver profiles from Firestore.
+ * 2. Approving/rejecting/suspending accounts (role-based controls).
+ * 3. Connecting to the Node.js Express server to perform direct password updates.
+ * 4. Provisioning new supervisor accounts using secondary Firebase auth configurations.
+ */
+
 import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { UserProfile, AccountStatus, Driver } from '../types';
+
 
 export async function getAllUsers(): Promise<UserProfile[]> {
   const snap = await getDocs(collection(db, 'users'));

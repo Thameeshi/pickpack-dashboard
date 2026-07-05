@@ -1,3 +1,14 @@
+/**
+ * TasksPage — Task & Delivery Assignment Management
+ * 
+ * Provides features for administrators/supervisors to:
+ * 1. Read real-time tasks list (pending, assigned, accepted, in_progress, arrived, delivered, failed).
+ * 2. Create tasks with descriptions, priority, locations, item counts, base fees, and supervisor credentials.
+ * 3. Assign tasks to online/approved drivers.
+ * 4. Update task states, track verification QR codes, and trigger barcode-based validation checks.
+ * 5. Delete or archive task entries.
+ */
+
 import { useEffect, useState } from 'react';
 import { subscribeToTasks, createTask, assignTaskToDriver, updateTask, deleteTask } from '../services/taskService';
 import { getDrivers } from '../services/userService';

@@ -1,3 +1,15 @@
+/**
+ * OverviewPage — Admin/Supervisor Main Operations Panel
+ * 
+ * Displays aggregate logistics metrics in real-time by subscribing to:
+ * - Active trips (duty status, active routes)
+ * - Tasks (pending, in_progress, delivered, failed)
+ * - Fuel expenses (pending verification)
+ * - Repair requests (vehicle maintenance updates)
+ * 
+ * Provides quick visual metrics (cards), pending approvals lists, and a real-time activity feed.
+ */
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToTasks } from '../services/taskService';
