@@ -1,3 +1,12 @@
+/**
+ * AuthContext — Web Dashboard Authentication State Provider
+ * 
+ * This context wraps the entire React app. It:
+ * 1. Establishes the real-time listener for current login state.
+ * 2. Fetches the Firestore profile and checks the role.
+ * 3. Enforces that only 'supervisor' or 'superadmin' users can access the dashboard.
+ */
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -19,18 +28,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Set up Firebase Auth state observer
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
         try {
+          // Fetch the user's role profile doc from Firestore
           const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (snap.exists()) {
             const p = snap.data() as UserProfile;
-            // Only allow supervisors and superadmins
+            // Guard: Only allow users with administrative privileges (supervisors/superadmins)
             if (p.role === 'supervisor' || p.role === 'superadmin') {
               setProfile(p);
             } else {
+              // Sign out immediately if role is driver or other non-admin
               setProfile(null);
               await signOut(auth);
             }
@@ -48,11 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  // Dashboard Sign In logic
   const login = async (email: string, password: string) => {
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const snap = await getDoc(doc(db, 'users', cred.user.uid));
     if (snap.exists()) {
       const p = snap.data() as UserProfile;
+      // Guard: Drivers are blocked from logging into the management dashboard
       if (p.role !== 'supervisor' && p.role !== 'superadmin') {
         await signOut(auth);
         throw new Error('Access denied. Only supervisors and admins can access this dashboard.');
@@ -64,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Dashboard Sign Out logic
   const logout = async () => {
     await signOut(auth);
     setProfile(null);
@@ -81,3 +96,4 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
+

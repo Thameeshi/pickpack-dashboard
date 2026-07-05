@@ -1,3 +1,13 @@
+/**
+ * Web Dashboard Routing & Access Guards (App.tsx)
+ * 
+ * Defines routing paths and navigation layouts using React Router:
+ * 1. ProtectedRoute: Enforces that only logged-in users with active profiles can view pages.
+ * 2. SupervisorRouteGuard: Checks supervisor access configurations to selectively restrict
+ *    modules (Overview, liveMap, repairs, trips) as toggled by the super administrator.
+ * 3. AppRoutes: Maps sub-routes to pages (Overview, Drivers, Tasks, Live Map, Settings).
+ */
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useEffect, useState } from 'react';
@@ -9,6 +19,7 @@ import TasksPage from './pages/TasksPage';
 import TripsPage from './pages/TripsPage';
 import FuelPage from './pages/FuelPage';
 import RepairPage from './pages/RepairPage';
+
 import UsersPage from './pages/UsersPage';
 import PasswordResetPage from './pages/PasswordResetPage';
 import NotificationsPage from './pages/NotificationsPage';

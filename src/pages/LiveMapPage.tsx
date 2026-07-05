@@ -1,3 +1,13 @@
+/**
+ * LiveMapPage — Real-Time Driver GPS Tracking Map
+ * 
+ * Integrates Leaflet.js to render an interactive map showing:
+ * 1. Active driver locations: Displays initial-based circular markers with colors
+ *    representing speed/motion status (Green = moving, Blue = transit, Orange = idle).
+ * 2. Active trip paths: Draws breadcrumb-based polylines of routes traveled by drivers on shift.
+ * 3. Driver search & metrics: Allows supervisors to filter drivers and focus/pan the map to their current position.
+ */
+
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -56,16 +66,19 @@ export default function LiveMapPage() {
   const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
-  // Init map
+  // 1. INITIALIZE LEAFLET MAP ON COMPONENT MOUNT
+  // Creates a Leaflet map centered on Colombo, Colombo District, Sri Lanka.
+  // Dark style tiles are loaded from CartoDB to fit the dashboard's design system.
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
-      center: [6.9271, 79.8612], // Colombo
+      center: [6.9271, 79.8612], // Latitude & Longitude for Colombo
       zoom: 12,
       zoomControl: true,
     });
 
+    // Dark-matter layer coordinates
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
       maxZoom: 19,
@@ -73,6 +86,7 @@ export default function LiveMapPage() {
 
     mapRef.current = map;
 
+    // React cleanup wrapper: Destroys the map instance on unmount to prevent canvas leaks
     return () => {
       map.remove();
       mapRef.current = null;
@@ -94,7 +108,12 @@ export default function LiveMapPage() {
     return subscribeToTrips(setTrips);
   }, []);
 
-  // Update markers when drivers change
+  // 2. LIVE MARKER DIFFING LOOP
+  // Keeps map icons synchronized with real-time location coordinate streams:
+  // - Matches live update packages by driver UID.
+  // - Repositions existing markers in place to preserve leaflet animations.
+  // - Creates new markers for newly online drivers, linking popup details & clicks.
+  // - Removes markers for drivers who have logged off or gone inactive.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
