@@ -14,7 +14,7 @@ import { subscribeToTasks, createTask, assignTaskToDriver, updateTask, deleteTas
 import { getDrivers } from '../services/userService';
 import { Task, UserProfile, TaskStatus } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Plus, X, Trash2, UserPlus } from 'lucide-react';
+import { Search, Plus, X, Trash2, UserPlus, Eye } from 'lucide-react';
 
 function timeAgo(ts: number): string {
   const diff = Date.now() - ts;
@@ -106,7 +106,7 @@ export default function TasksPage() {
                     <td style={{ whiteSpace: 'nowrap' }}>{timeAgo(t.createdAt)}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setShowDetail(t)}>View</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setShowDetail(t)}><Eye size={13} /></button>
                         {!t.assignedDriverId && (
                           <button className="btn btn-secondary btn-sm" onClick={() => setShowAssign(t)}><UserPlus size={13} /></button>
                         )}

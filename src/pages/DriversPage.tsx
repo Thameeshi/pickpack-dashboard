@@ -166,8 +166,6 @@ export default function DriversPage() {
                     <td>{live ? <span className="badge badge-success">Online</span> : <span className="badge badge-default">Offline</span>}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setSelected(d)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, width: 68 }}><Eye size={14} /> View</button>
-                        
                         <div style={{ display: 'flex', gap: 6, width: 95, flexShrink: 0 }}>
                           {d.status === 'pending' && (
                             <>
@@ -182,6 +180,8 @@ export default function DriversPage() {
                             <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(d, 'approved')}>Reactivate</button>
                           )}
                         </div>
+
+                        <button className="btn btn-ghost btn-sm" onClick={() => setSelected(d)}><Eye size={14} /></button>
 
                         {profile?.role === 'superadmin' && (
                           <button className="btn btn-ghost btn-sm" onClick={() => setDriverToDelete(d)}><Trash2 size={14} /></button>
