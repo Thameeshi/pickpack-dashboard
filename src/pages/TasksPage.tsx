@@ -46,6 +46,8 @@ export default function TasksPage() {
   const [showAssign, setShowAssign] = useState<Task | null>(null);
   const [showDetail, setShowDetail] = useState<Task | null>(null);
 
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+
   useEffect(() => {
     const unsub = subscribeToTasks(setTasks);
     getDrivers().then(d => setDrivers(d.filter(x => x.status === 'approved')));
@@ -108,7 +110,7 @@ export default function TasksPage() {
                         {!t.assignedDriverId && (
                           <button className="btn btn-secondary btn-sm" onClick={() => setShowAssign(t)}><UserPlus size={13} /></button>
                         )}
-                        <button className="btn btn-ghost btn-sm" onClick={async () => { if (confirm('Delete this task?')) { await deleteTask(t.id!); }}}><Trash2 size={13} /></button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setTaskToDelete(t)}><Trash2 size={13} /></button>
                       </div>
                     </td>
                   </tr>
@@ -122,8 +124,59 @@ export default function TasksPage() {
         {showCreate && <CreateTaskModal drivers={drivers} supervisorId={profile?.uid || ''} supervisorName={profile?.name || ''} onClose={() => setShowCreate(false)} />}
         {showAssign && <AssignModal task={showAssign} drivers={drivers} onClose={() => setShowAssign(null)} />}
         {showDetail && <TaskDetailModal task={showDetail} onClose={() => setShowDetail(null)} />}
+        {taskToDelete && (
+          <ConfirmationModal 
+            task={taskToDelete} 
+            onClose={() => setTaskToDelete(null)} 
+            onConfirm={async () => {
+              await deleteTask(taskToDelete.id!);
+              setTaskToDelete(null);
+            }} 
+          />
+        )}
       </div>
     </>
+  );
+}
+
+function ConfirmationModal({ task, onClose, onConfirm }: { task: Task; onClose: () => void; onConfirm: () => Promise<void> }) {
+  const [loading, setLoading] = useState(false);
+  const handleConfirm = async () => {
+    setLoading(true);
+    await onConfirm();
+    setLoading(false);
+  };
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480, padding: '24px' }}>
+        <div className="modal-header" style={{ marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '20px', fontWeight: '700' }}>Delete Task</h3>
+          <button className="btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
+        </div>
+        <div className="modal-body" style={{ padding: '8px 0 24px 0' }}>
+          <p style={{ fontSize: '16px', color: 'var(--text-primary)', marginBottom: '10px', lineHeight: '1.5' }}>
+            Are you sure you want to delete the task for <strong>{task.recipientName}</strong>?
+          </p>
+          <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+            This action cannot be undone. This task will be permanently removed from the database.
+          </p>
+        </div>
+        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading} style={{ padding: '10px 20px', fontSize: '14.5px' }}>
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            className="btn btn-primary" 
+            onClick={handleConfirm} 
+            disabled={loading} 
+            style={{ backgroundColor: '#EF4444', borderColor: '#EF4444', color: 'white', padding: '10px 20px', fontSize: '14.5px' }}
+          >
+            {loading ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
