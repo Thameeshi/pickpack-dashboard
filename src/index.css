@@ -135,9 +135,18 @@ body {
 }
 .page-header-left h2 { font-size: 22px; font-weight: 800; color: white; }
 .page-header-left p { font-size: 13px; color: rgba(255, 255, 255, 0.85); margin-top: 2px; }
-.page-header-actions { display: flex; gap: 10px; align-items: center; }
+.page-header-actions { display: flex; gap: 10px; align-items: center; margin-right: 150px; }
 .page-header-actions span { color: var(--accent) !important; font-weight: 600; }
 .page-header .btn-primary { background: white; color: var(--primary); border: 1px solid white; }
+
+/* Global User Profile Dropdown Styling */
+.profile-top-btn:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+.dropdown-item:hover {
+  background: var(--bg-card-hover) !important;
+  color: var(--primary) !important;
+}
 .page-header .btn-primary:hover:not(:disabled) { background: var(--bg-card-hover); color: var(--primary-light); box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateY(-1px); }
 
 .page-content { padding: 28px 32px; flex: 1; }

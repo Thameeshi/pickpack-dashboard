@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { subscribeToTrips, cleanupAllOrphanedTrips, cancelTrip } from '../services/tripService';
 import { TripSession } from '../types';
-import { Search } from 'lucide-react';
+import { Search, Truck, CheckCircle, Navigation, Box, XCircle, AlertTriangle } from 'lucide-react';
 
 function formatDate(ts: number) { return new Date(ts).toLocaleString(); }
 function formatDuration(start: number, end?: number) {
@@ -58,21 +58,37 @@ export default function TripsPage() {
         <div className="page-header-left"><h2>Trips</h2><p>{trips.length} total trips</p></div>
         {activeCount > 1 && (
           <button
-            className="btn btn-primary"
+            className="btn"
             onClick={handleCleanup}
             disabled={cleaning}
-            style={{ background: '#e53e3e', border: 'none', padding: '8px 16px', borderRadius: 8, color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: cleaning ? 0.6 : 1 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, backgroundColor: '#EF4444', border: 'none', padding: '8px 16px', borderRadius: 8, color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: cleaning ? 0.6 : 1 }}
           >
-            {cleaning ? 'Cleaning...' : `🧹 Clean Up Duplicates (${activeCount} active)`}
+            <AlertTriangle size={15} /> {cleaning ? 'Cleaning...' : `Clean Up Duplicates (${activeCount} active)`}
           </button>
         )}
       </div>
       <div className="page-content">
         <div className="stats-grid">
-          <div className="stat-card"><div className="stat-icon">🚛</div><div className="stat-value">{activeCount}</div><div className="stat-label">Active Now</div></div>
-          <div className="stat-card"><div className="stat-icon">✅</div><div className="stat-value">{completedCount}</div><div className="stat-label">Completed</div></div>
-          <div className="stat-card"><div className="stat-icon">📏</div><div className="stat-value">{totalDistance.toFixed(0)} km</div><div className="stat-label">Total Distance</div></div>
-          <div className="stat-card"><div className="stat-icon">📦</div><div className="stat-value">{totalDeliveries}</div><div className="stat-label">Total Deliveries</div></div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#3B82F6' }}><Truck size={22} /></div>
+            <div className="stat-value">{activeCount}</div>
+            <div className="stat-label">Active Now</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ backgroundColor: 'rgba(16,185,129,0.1)', color: '#10B981' }}><CheckCircle size={22} /></div>
+            <div className="stat-value">{completedCount}</div>
+            <div className="stat-label">Completed</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ backgroundColor: 'rgba(139,92,246,0.1)', color: '#8B5CF6' }}><Navigation size={22} /></div>
+            <div className="stat-value">{totalDistance.toFixed(0)} km</div>
+            <div className="stat-label">Total Distance</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ backgroundColor: 'rgba(245,158,11,0.1)', color: '#F59E0B' }}><Box size={22} /></div>
+            <div className="stat-value">{totalDeliveries}</div>
+            <div className="stat-label">Total Deliveries</div>
+          </div>
         </div>
         <div className="filters-row">
           <div className="search-box"><Search size={16} /><input placeholder="Search by driver..." value={search} onChange={e => setSearch(e.target.value)} /></div>
@@ -89,20 +105,36 @@ export default function TripsPage() {
               {filtered.map(t => (
                 <tr key={t.id}>
                   <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{t.driverName}</td>
-                  <td><span className={`badge ${t.status === 'active' ? 'badge-success' : t.status === 'completed' ? 'badge-info' : 'badge-default'}`}>{t.status}</span></td>
+                  <td>
+                    <span className={`badge ${t.status === 'active' ? 'badge-success' : t.status === 'completed' ? 'badge-info' : 'badge-danger'}`}>
+                      {t.status}
+                    </span>
+                  </td>
                   <td style={{ whiteSpace: 'nowrap' }}>{formatDate(t.startTime)}</td>
                   <td>{formatDuration(t.startTime, t.endTime)}</td>
                   <td>{t.totalDistance ? `${t.totalDistance.toFixed(1)} km` : '—'}</td>
-                  <td>{t.deliveriesCompleted || 0} ✅ / {t.deliveriesFailed || 0} ❌</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#10B981', fontWeight: 600 }}>
+                        {t.deliveriesCompleted || 0} <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-muted)' }}>success</span>
+                      </span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: (t.deliveriesFailed || 0) > 0 ? '#EF4444' : 'var(--text-muted)', fontWeight: (t.deliveriesFailed || 0) > 0 ? 600 : 400 }}>
+                        {t.deliveriesFailed || 0} <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-muted)' }}>failed</span>
+                      </span>
+                    </div>
+                  </td>
                   <td>{t.totalFuelCost ? `LKR ${t.totalFuelCost.toFixed(0)}` : '—'}</td>
                   <td>
-                    {t.status === 'active' && (
+                    {t.status === 'active' ? (
                       <button
                         onClick={() => handleCancelTrip(t.id!, t.driverName)}
-                        style={{ background: '#fed7d7', color: '#c53030', border: '1px solid #feb2b2', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                        className="btn btn-danger btn-sm"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', fontSize: 12, backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.2)', borderStyle: 'solid', borderWidth: 1, borderRadius: 6, fontWeight: 600 }}
                       >
-                        Cancel
+                        <XCircle size={13} /> Cancel
                       </button>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
                     )}
                   </td>
                 </tr>
