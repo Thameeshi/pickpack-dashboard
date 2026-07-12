@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToNotifications, markAsRead, markAllAsRead } from '../services/notificationService';
 import { AppNotification } from '../types';
-import { CheckCheck, Bell } from 'lucide-react';
+import { CheckCheck } from 'lucide-react';
 
 function timeAgo(ts: number): string {
   const diff = Date.now() - ts;

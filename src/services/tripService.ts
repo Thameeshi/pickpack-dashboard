@@ -61,7 +61,9 @@ export async function cleanupAllOrphanedTrips(): Promise<number> {
           endTime: Date.now(),
         });
         totalCancelled++;
-      } catch {}
+      } catch (err) {
+        console.error('Failed to update duplicate active trip status:', err);
+      }
     }
   }
 

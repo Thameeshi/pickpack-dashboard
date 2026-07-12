@@ -10,9 +10,9 @@
  */
 
 import { useEffect, useState } from 'react';
-import { subscribeToTasks, createTask, assignTaskToDriver, updateTask, deleteTask } from '../services/taskService';
+import { subscribeToTasks, createTask, assignTaskToDriver, deleteTask } from '../services/taskService';
 import { getDrivers } from '../services/userService';
-import { Task, UserProfile, TaskStatus } from '../types';
+import { Task, UserProfile, TaskPriority } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { Search, Plus, X, Trash2, UserPlus, Eye } from 'lucide-react';
 
@@ -181,7 +181,7 @@ function ConfirmationModal({ task, onClose, onConfirm }: { task: Task; onClose: 
 }
 
 function CreateTaskModal({ drivers, supervisorId, supervisorName, onClose }: { drivers: UserProfile[]; supervisorId: string; supervisorName: string; onClose: () => void }) {
-  const [form, setForm] = useState({ pickupLocation: '', deliveryLocation: '', recipientName: '', recipientPhone: '', description: '', priority: 'MEDIUM' as any, assignedDriverId: '' });
+  const [form, setForm] = useState({ pickupLocation: '', deliveryLocation: '', recipientName: '', recipientPhone: '', description: '', priority: 'MEDIUM' as TaskPriority, assignedDriverId: '' });
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -207,7 +207,7 @@ function CreateTaskModal({ drivers, supervisorId, supervisorName, onClose }: { d
             </div>
             <div className="form-group"><label className="form-label">Description</label><textarea className="form-textarea" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} /></div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div className="form-group"><label className="form-label">Priority</label><select className="form-select" value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value as any }))}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></select></div>
+              <div className="form-group"><label className="form-label">Priority</label><select className="form-select" value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value as TaskPriority }))}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></select></div>
               <div className="form-group"><label className="form-label">Assign Driver</label><select className="form-select" value={form.assignedDriverId} onChange={e => setForm(p => ({ ...p, assignedDriverId: e.target.value }))}><option value="">Unassigned</option>{drivers.map(d => <option key={d.uid} value={d.uid}>{d.name}</option>)}</select></div>
             </div>
           </div>

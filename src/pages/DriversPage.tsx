@@ -8,7 +8,7 @@
  * 4. Notifications: Automatically generates notifications for drivers upon account approval or suspension.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getDrivers, updateUserStatus, subscribeToDriverLocations, deleteDriver } from '../services/userService';
 import { createNotification } from '../services/notificationService';
 import { getTripsByDriver } from '../services/tripService';
@@ -27,17 +27,16 @@ export default function DriversPage() {
   const [selected, setSelected] = useState<UserProfile | null>(null);
   const [driverToDelete, setDriverToDelete] = useState<UserProfile | null>(null);
   const [trips, setTrips] = useState<TripSession[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
-    setLoading(true);
     const d = await getDrivers();
     setDrivers(d);
-    setLoading(false);
   };
 
   useEffect(() => {
-    refresh();
+    Promise.resolve().then(() => {
+      refresh();
+    });
     const unsubLive = subscribeToDriverLocations(setLiveDrivers);
     const unsubReviews = subscribeToDriverReviews(setReviews);
     return () => {
@@ -46,11 +45,12 @@ export default function DriversPage() {
     };
   }, []);
 
+  const selectedUid = selected?.uid;
   useEffect(() => {
-    if (selected) {
-      getTripsByDriver(selected.uid).then(setTrips);
+    if (selectedUid) {
+      getTripsByDriver(selectedUid).then(setTrips);
     }
-  }, [selected?.uid]);
+  }, [selectedUid]);
 
   const filtered = drivers.filter(d => {
     if (filter !== 'all' && d.status !== filter) return false;
@@ -63,7 +63,7 @@ export default function DriversPage() {
 
   const liveMap = new Map(liveDrivers.map(d => [d.uid, d]));
 
-  const handleStatusChange = async (d: UserProfile, status: 'approved' | 'suspended' | 'rejected') => {
+  const handleStatusChange = useCallback(async (d: UserProfile, status: 'approved' | 'suspended' | 'rejected') => {
     await updateUserStatus(d.uid, status, profile?.uid);
     
     // Notify the supervisor who added the driver when they are approved
@@ -83,8 +83,13 @@ export default function DriversPage() {
     }
 
     refresh();
-    if (selected?.uid === d.uid) setSelected(prev => prev ? { ...prev, status } : null);
-  };
+    setSelected(prev => {
+      if (prev?.uid === d.uid) {
+        return { ...prev, status };
+      }
+      return prev;
+    });
+  }, [profile?.uid]);
 
   // Helper to calculate rating for a driver
   const getDriverRatingStats = (driverId: string) => {

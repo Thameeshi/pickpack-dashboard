@@ -13,7 +13,13 @@ export default function UsersPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const refresh = async () => { const u = await getAllUsers(); setUsers(u); };
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    let mounted = true;
+    getAllUsers().then(u => {
+      if (mounted) setUsers(u);
+    });
+    return () => { mounted = false; };
+  }, []);
 
   if (profile?.role !== 'superadmin') {
     return (

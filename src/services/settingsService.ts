@@ -2,8 +2,6 @@ import { doc, getDoc, setDoc, onSnapshot, collection, getDocs, deleteDoc, addDoc
 import { db } from '../lib/firebase';
 import { SupervisorModulesSettings, DEFAULT_SUPERVISOR_MODULES, DriverReview, UserProfile } from '../types';
 
-const SETTINGS_DOC_REF = doc(db, 'settings', 'supervisor_modules');
-
 // Get Supervisor Modules Settings
 export async function getSupervisorModulesSettings(supervisorId?: string): Promise<SupervisorModulesSettings> {
   try {
@@ -45,7 +43,7 @@ export function subscribeToSupervisorModulesSettings(callback: (settings: Superv
 // Get Reviews
 export async function getDriverReviews(driverId?: string): Promise<DriverReview[]> {
   try {
-    let q = collection(db, 'reviews');
+    const q = collection(db, 'reviews');
     if (driverId) {
       const qry = query(q, where('driverId', '==', driverId));
       const snap = await getDocs(qry);

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { subscribeToFuelExpenses, updateFuelExpenseStatus, updateFuelExpensePaymentStatus } from '../services/fuelService';
 import { FuelExpense } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, CheckCircle, XCircle, ExternalLink, DollarSign, Fuel, Clock, CheckCircle2, FileText, Send, Check, X } from 'lucide-react';
+import { Search, DollarSign, Fuel, Clock, CheckCircle2, FileText, Send, Check, X } from 'lucide-react';
 
 function formatExpenseDate(dateStr?: string) {
   if (!dateStr) return '—';

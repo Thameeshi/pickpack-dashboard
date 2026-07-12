@@ -22,7 +22,9 @@ export default function PasswordResetPage() {
   };
 
   useEffect(() => {
-    refresh();
+    Promise.resolve().then(() => {
+      refresh();
+    });
   }, []);
 
   if (profile?.role !== 'superadmin') {

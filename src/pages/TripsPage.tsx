@@ -36,8 +36,8 @@ export default function TripsPage() {
     try {
       const count = await cleanupAllOrphanedTrips();
       alert(`Cleaned up ${count} orphaned trip(s). The list will update automatically.`);
-    } catch (e: any) {
-      alert('Cleanup failed: ' + (e.message || e));
+    } catch (e: unknown) {
+      alert('Cleanup failed: ' + (e instanceof Error ? e.message : String(e)));
     } finally {
       setCleaning(false);
     }
@@ -47,8 +47,8 @@ export default function TripsPage() {
     if (!confirm(`Cancel active trip for ${driverName}?`)) return;
     try {
       await cancelTrip(tripId);
-    } catch (e: any) {
-      alert('Failed to cancel trip: ' + (e.message || e));
+    } catch (e: unknown) {
+      alert('Failed to cancel trip: ' + (e instanceof Error ? e.message : String(e)));
     }
   };
 

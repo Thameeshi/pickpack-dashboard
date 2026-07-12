@@ -25,7 +25,9 @@ export default function DashboardLayout() {
     if (profile?.role === 'supervisor' && profile?.uid) {
       return subscribeToSupervisorModulesSettings(setSupervisorSettings, profile.uid);
     } else {
-      setSupervisorSettings(DEFAULT_SUPERVISOR_MODULES);
+      Promise.resolve().then(() => {
+        setSupervisorSettings(DEFAULT_SUPERVISOR_MODULES);
+      });
     }
   }, [profile?.uid, profile?.role]);
 

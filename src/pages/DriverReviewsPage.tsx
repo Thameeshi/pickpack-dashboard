@@ -20,12 +20,6 @@ export default function DriverReviewsPage() {
   const [comment, setComment] = useState('');
   const [hoverRating, setHoverRating] = useState<number | null>(null);
 
-  useEffect(() => {
-    loadDrivers();
-    const unsub = subscribeToDriverReviews(setReviews);
-    return unsub;
-  }, []);
-
   const loadDrivers = async () => {
     try {
       setLoading(true);
@@ -37,6 +31,14 @@ export default function DriverReviewsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      loadDrivers();
+    });
+    const unsub = subscribeToDriverReviews(setReviews);
+    return unsub;
+  }, []);
 
   const getDriverStats = (driverId: string) => {
     const driverReviews = reviews.filter(r => r.driverId === driverId);

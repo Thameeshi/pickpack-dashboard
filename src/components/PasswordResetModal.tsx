@@ -58,8 +58,8 @@ export default function PasswordResetModal({
         setConfirmPassword('');
         setSuccess(false);
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to update password');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update password');
     } finally {
       setLoading(false);
     }
