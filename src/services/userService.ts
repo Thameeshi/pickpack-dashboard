@@ -8,11 +8,18 @@
  * 4. Provisioning new supervisor accounts using secondary Firebase auth configurations.
  */
 
-import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { UserProfile, AccountStatus, Driver } from '../types';
+
+export async function deleteDriver(uid: string): Promise<void> {
+  // Delete the user profile from firestore
+  await deleteDoc(doc(db, 'users', uid));
+  // Also clean up any active tracking document in 'drivers'
+  await deleteDoc(doc(db, 'drivers', uid));
+}
 
 
 export async function getAllUsers(): Promise<UserProfile[]> {

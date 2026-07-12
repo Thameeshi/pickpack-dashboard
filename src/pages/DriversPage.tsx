@@ -9,13 +9,13 @@
  */
 
 import { useEffect, useState } from 'react';
-import { getDrivers, updateUserStatus, subscribeToDriverLocations } from '../services/userService';
+import { getDrivers, updateUserStatus, subscribeToDriverLocations, deleteDriver } from '../services/userService';
 import { createNotification } from '../services/notificationService';
 import { getTripsByDriver } from '../services/tripService';
 import { subscribeToDriverReviews } from '../services/settingsService';
 import { UserProfile, Driver, TripSession, DriverReview } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, CheckCircle, XCircle, Eye, X, Star } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Eye, X, Star, Trash2 } from 'lucide-react';
 
 export default function DriversPage() {
   const { profile } = useAuth();
@@ -25,6 +25,7 @@ export default function DriversPage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [selected, setSelected] = useState<UserProfile | null>(null);
+  const [driverToDelete, setDriverToDelete] = useState<UserProfile | null>(null);
   const [trips, setTrips] = useState<TripSession[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -164,19 +165,26 @@ export default function DriversPage() {
                     <td><StatusBadge status={d.status} /></td>
                     <td>{live ? <span className="badge badge-success">Online</span> : <span className="badge badge-default">Offline</span>}</td>
                     <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setSelected(d)}><Eye size={14} /> View</button>
-                        {d.status === 'pending' && (
-                          <>
-                            <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(d, 'approved')}><CheckCircle size={14} /></button>
-                            <button className="btn btn-danger btn-sm" onClick={() => handleStatusChange(d, 'rejected')}><XCircle size={14} /></button>
-                          </>
-                        )}
-                        {d.status === 'approved' && (
-                          <button className="btn btn-secondary btn-sm" onClick={() => handleStatusChange(d, 'suspended')}>Suspend</button>
-                        )}
-                        {d.status === 'suspended' && (
-                          <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(d, 'approved')}>Reactivate</button>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setSelected(d)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, width: 68 }}><Eye size={14} /> View</button>
+                        
+                        <div style={{ display: 'flex', gap: 6, width: 95, flexShrink: 0 }}>
+                          {d.status === 'pending' && (
+                            <>
+                              <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(d, 'approved')}><CheckCircle size={14} /></button>
+                              <button className="btn btn-danger btn-sm" onClick={() => handleStatusChange(d, 'rejected')}><XCircle size={14} /></button>
+                            </>
+                          )}
+                          {d.status === 'approved' && (
+                            <button className="btn btn-secondary btn-sm" onClick={() => handleStatusChange(d, 'suspended')}>Suspend</button>
+                          )}
+                          {d.status === 'suspended' && (
+                            <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(d, 'approved')}>Reactivate</button>
+                          )}
+                        </div>
+
+                        {profile?.role === 'superadmin' && (
+                          <button className="btn btn-ghost btn-sm" onClick={() => setDriverToDelete(d)}><Trash2 size={14} /></button>
                         )}
                       </div>
                     </td>
@@ -257,6 +265,43 @@ export default function DriversPage() {
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+        {driverToDelete && (
+          <div className="modal-overlay" onClick={() => setDriverToDelete(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480, padding: '24px' }}>
+              <div className="modal-header" style={{ marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '20px', fontWeight: '700' }}>Delete Driver</h3>
+                <button className="btn-ghost btn-icon" onClick={() => setDriverToDelete(null)}><X size={20} /></button>
+              </div>
+              <div className="modal-body" style={{ padding: '8px 0 24px 0' }}>
+                <p style={{ fontSize: '16px', color: 'var(--text-primary)', marginBottom: '10px', lineHeight: '1.5' }}>
+                  Are you sure you want to delete the driver account for <strong>{driverToDelete.name || driverToDelete.displayName}</strong>?
+                </p>
+                <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  This action cannot be undone. This driver's profile and active location tracking will be permanently removed.
+                </p>
+              </div>
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setDriverToDelete(null)} style={{ padding: '10px 20px', fontSize: '14.5px' }}>
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary" 
+                  onClick={async () => {
+                    if (driverToDelete) {
+                      await deleteDriver(driverToDelete.uid);
+                      setDriverToDelete(null);
+                      refresh();
+                    }
+                  }} 
+                  style={{ backgroundColor: '#EF4444', borderColor: '#EF4444', color: 'white', padding: '10px 20px', fontSize: '14.5px' }}
+                >
+                  Delete
+                </button>
               </div>
             </div>
           </div>
