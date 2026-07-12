@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, updateDoc, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { FuelExpense, ExpenseStatus } from '../types';
 

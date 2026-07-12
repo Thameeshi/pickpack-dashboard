@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { subscribeToRepairRequests, updateRepairRequestStatus } from '../services/repairService';
 import { RepairRequest, REPAIR_TYPE_LABELS } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, CheckCircle, XCircle, ExternalLink, PenTool } from 'lucide-react';
+import { Search, CheckCircle, XCircle, PenTool } from 'lucide-react';
 
 export default function RepairPage() {
   const { profile } = useAuth();

@@ -8,7 +8,7 @@
  * 4. Notifications: Automatically generates notifications for drivers upon account approval or suspension.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getDrivers, updateUserStatus, subscribeToDriverLocations, deleteDriver } from '../services/userService';
 import { createNotification } from '../services/notificationService';
 import { getTripsByDriver } from '../services/tripService';
@@ -27,17 +27,16 @@ export default function DriversPage() {
   const [selected, setSelected] = useState<UserProfile | null>(null);
   const [driverToDelete, setDriverToDelete] = useState<UserProfile | null>(null);
   const [trips, setTrips] = useState<TripSession[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
-    setLoading(true);
     const d = await getDrivers();
     setDrivers(d);
-    setLoading(false);
   };
 
   useEffect(() => {
-    refresh();
+    Promise.resolve().then(() => {
+      refresh();
+    });
     const unsubLive = subscribeToDriverLocations(setLiveDrivers);
     const unsubReviews = subscribeToDriverReviews(setReviews);
     return () => {
@@ -46,11 +45,12 @@ export default function DriversPage() {
     };
   }, []);
 
+  const selectedUid = selected?.uid;
   useEffect(() => {
-    if (selected) {
-      getTripsByDriver(selected.uid).then(setTrips);
+    if (selectedUid) {
+      getTripsByDriver(selectedUid).then(setTrips);
     }
-  }, [selected?.uid]);
+  }, [selectedUid]);
 
   const filtered = drivers.filter(d => {
     if (filter !== 'all' && d.status !== filter) return false;
@@ -63,7 +63,7 @@ export default function DriversPage() {
 
   const liveMap = new Map(liveDrivers.map(d => [d.uid, d]));
 
-  const handleStatusChange = async (d: UserProfile, status: 'approved' | 'suspended' | 'rejected') => {
+  const handleStatusChange = useCallback(async (d: UserProfile, status: 'approved' | 'suspended' | 'rejected') => {
     await updateUserStatus(d.uid, status, profile?.uid);
     
     // Notify the supervisor who added the driver when they are approved
@@ -83,8 +83,13 @@ export default function DriversPage() {
     }
 
     refresh();
-    if (selected?.uid === d.uid) setSelected(prev => prev ? { ...prev, status } : null);
-  };
+    setSelected(prev => {
+      if (prev?.uid === d.uid) {
+        return { ...prev, status };
+      }
+      return prev;
+    });
+  }, [profile?.uid]);
 
   // Helper to calculate rating for a driver
   const getDriverRatingStats = (driverId: string) => {
@@ -166,8 +171,6 @@ export default function DriversPage() {
                     <td>{live ? <span className="badge badge-success">Online</span> : <span className="badge badge-default">Offline</span>}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setSelected(d)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, width: 68 }}><Eye size={14} /> View</button>
-                        
                         <div style={{ display: 'flex', gap: 6, width: 95, flexShrink: 0 }}>
                           {d.status === 'pending' && (
                             <>
@@ -182,6 +185,8 @@ export default function DriversPage() {
                             <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(d, 'approved')}>Reactivate</button>
                           )}
                         </div>
+
+                        <button className="btn btn-ghost btn-sm" onClick={() => setSelected(d)}><Eye size={14} /></button>
 
                         {profile?.role === 'superadmin' && (
                           <button className="btn btn-ghost btn-sm" onClick={() => setDriverToDelete(d)}><Trash2 size={14} /></button>

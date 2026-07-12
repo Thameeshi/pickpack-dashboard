@@ -17,7 +17,7 @@ import { Driver, UserProfile, TripSession } from '../types';
 import { Search, RefreshCw } from 'lucide-react';
 
 // Fix default icon issue with bundlers
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
@@ -45,14 +45,6 @@ function getStatusColor(speed?: number | null): string {
   if (!speed || speed < 1) return '#F59E0B'; // idle
   if (speed < 10) return '#3B82F6'; // transit
   return '#10B981'; // moving
-}
-
-function timeAgo(ts: number): string {
-  const diff = Date.now() - ts;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
-  return `${Math.floor(mins / 60)}h ago`;
 }
 
 export default function LiveMapPage() {

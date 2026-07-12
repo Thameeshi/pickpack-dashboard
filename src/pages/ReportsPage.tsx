@@ -129,18 +129,24 @@ export default function ReportsPage() {
     })();
   }, []);
 
+  const role = profile?.role;
+  const uid = profile?.uid;
+
   const since = useMemo(() => {
-    const now = Date.now();
-    return range === 'weekly' ? now - 7 * 24 * 60 * 60 * 1000 : now - 30 * 24 * 60 * 60 * 1000;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startOfToday = today.getTime();
+    return range === 'weekly' ? startOfToday - 7 * 24 * 60 * 60 * 1000 : startOfToday - 30 * 24 * 60 * 60 * 1000;
   }, [range]);
 
   const visibleTasks = useMemo(() => {
-    const inPeriod = tasks.filter(t => (t.createdAt || 0) >= since);
-    if (profile?.role === 'supervisor') {
-      return inPeriod.filter(t => t.supervisorId === profile.uid);
-    }
-    return inPeriod;
-  }, [tasks, profile?.role, profile?.uid, since]);
+    return tasks.filter(t => {
+      const okPeriod = (t.createdAt || 0) >= since;
+      if (!okPeriod) return false;
+      if (role === 'supervisor') return t.supervisorId === uid;
+      return true;
+    });
+  }, [tasks, role, uid, since]);
 
   const driverOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -236,7 +242,9 @@ export default function ReportsPage() {
 
   useEffect(() => {
     if (!loading) {
-      setReport(buildReport(filteredTasks));
+      Promise.resolve().then(() => {
+        setReport(buildReport(filteredTasks));
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);

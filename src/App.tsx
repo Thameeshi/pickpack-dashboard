@@ -46,7 +46,7 @@ function SupervisorRouteGuard({ children, moduleKey }: { children: React.ReactNo
 
   useEffect(() => {
     if (profile?.role !== 'supervisor' || !profile?.uid) {
-      setLoading(false);
+      Promise.resolve().then(() => setLoading(false));
       return;
     }
     return subscribeToSupervisorModulesSettings((s) => {

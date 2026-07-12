@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { Settings, Users, Shield, Star, Trash2, Database, Search, HelpCircle, CheckCircle } from 'lucide-react';
+import { Shield, Star, Trash2, Database, Search, HelpCircle, CheckCircle } from 'lucide-react';
 import { UserProfile, Task, DriverReview, SupervisorModulesSettings } from '../types';
 import { getDrivers, getSupervisors } from '../services/userService';
 import {
@@ -39,7 +39,6 @@ export default function SettingsPage() {
   const [permissions, setPermissions] = useState<SupervisorModulesSettings | null>(null);
   const [supervisors, setSupervisors] = useState<UserProfile[]>([]);
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string>('');
-  const [savingPermissions, setSavingPermissions] = useState(false);
   const [permSuccess, setPermSuccess] = useState(false);
 
   // Reviews Tab States
@@ -49,28 +48,6 @@ export default function SettingsPage() {
   const [seeding, setSeeding] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [seedSuccess, setSeedSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (profile?.role === 'superadmin') {
-      loadStats();
-      loadSupervisors();
-      loadDrivers();
-      
-      // Subscribe to reviews in real-time
-      const unsub = subscribeToDriverReviews((newReviews) => {
-        setReviews(newReviews.sort((a, b) => b.createdAt - a.createdAt));
-      });
-      return unsub;
-    }
-  }, [profile]);
-
-  useEffect(() => {
-    if (selectedSupervisorId) {
-      loadPermissions(selectedSupervisorId);
-    } else {
-      setPermissions(null);
-    }
-  }, [selectedSupervisorId]);
 
   const loadStats = async () => {
     try {
@@ -124,6 +101,32 @@ export default function SettingsPage() {
     setDrivers(d);
   };
 
+  useEffect(() => {
+    if (profile?.role === 'superadmin') {
+      Promise.resolve().then(() => {
+        loadStats();
+        loadSupervisors();
+        loadDrivers();
+      });
+      
+      // Subscribe to reviews in real-time
+      const unsub = subscribeToDriverReviews((newReviews) => {
+        setReviews(newReviews.sort((a, b) => b.createdAt - a.createdAt));
+      });
+      return unsub;
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (selectedSupervisorId) {
+      Promise.resolve().then(() => {
+        loadPermissions(selectedSupervisorId);
+      });
+    } else {
+      Promise.resolve().then(() => setPermissions(null));
+    }
+  }, [selectedSupervisorId]);
+
   const handlePermissionToggle = async (key: keyof SupervisorModulesSettings) => {
     if (!permissions || !selectedSupervisorId) return;
     const updated = {
@@ -131,15 +134,12 @@ export default function SettingsPage() {
       [key]: !permissions[key]
     };
     setPermissions(updated);
-    setSavingPermissions(true);
     try {
       await saveSupervisorModulesSettings(selectedSupervisorId, updated);
       setPermSuccess(true);
       setTimeout(() => setPermSuccess(false), 2000);
     } catch (e) {
       console.error('Failed to save settings:', e);
-    } finally {
-      setSavingPermissions(false);
     }
   };
 
